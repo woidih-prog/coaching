@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1216">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Coaching">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Comprendre un coaching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Archivo+Narrow:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0E1216; --surface:#161C22; --raise:#1B232A; --line:#232C34;
+  --ink:#E9E7E2; --muted:#7B8894; --faint:#4C5862;
+  --amber:#E8A33D; --sage:#79BF95; --steel:#5E9BC4; --clay:#D9553F;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font-family:'Archivo',system-ui,-apple-system,sans-serif;
+  font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+a{color:var(--steel)}
+
+.wrap{max-width:860px;margin:0 auto;padding:34px 20px 90px}
+h1{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:clamp(32px,6vw,46px);line-height:1.02;letter-spacing:-.01em}
+h2{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:26px;line-height:1.1;margin-bottom:14px}
+.intro{color:var(--muted);max-width:56ch;margin-top:10px}
+.lbl{display:block;font-size:12.5px;color:var(--muted);margin:14px 0 6px}
+.note{font-size:13px;color:var(--muted);line-height:1.5}
+.err{color:var(--clay);font-size:13.5px}
+.ok{color:var(--sage)}
+
+section{display:none}
+section.on{display:block}
+
+.panneau{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:16px}
+input[type=text],input[type=password],textarea,select{
+  width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;
+  padding:11px 13px;color:var(--ink);outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--amber)}
+textarea{resize:vertical;min-height:130px;line-height:1.5}
+
+.btn{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:10px 18px;
+  font-size:14px;color:var(--muted);transition:border-color .15s,color .15s;white-space:nowrap}
+.btn:hover{border-color:var(--amber);color:var(--amber)}
+.btn.plein{background:var(--amber);border-color:var(--amber);color:#0E1216;font-weight:700}
+.btn.plein:hover{filter:brightness(1.07);color:#0E1216}
+.btn.on{border-color:var(--amber);color:var(--amber);background:rgba(232,163,61,.1)}
+.btn:disabled{opacity:.45;cursor:default}
+.rang{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+#depot{border:1.5px dashed var(--line);border-radius:12px;padding:22px;text-align:center;cursor:pointer;margin-top:4px}
+#depot:hover,#depot.survol{border-color:var(--amber);background:rgba(232,163,61,.04)}
+#depot strong{font-size:15px}
+
+.barre{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:12px}
+.barre i{display:block;height:100%;width:0;background:var(--amber);transition:width .3s}
+
+/* ---- bibliothèque ---- */
+.video{display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:10px;cursor:pointer}
+.video:hover{border-color:var(--muted)}
+.video .t{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:19px;line-height:1.2}
+.video .m{font-size:13px;color:var(--muted);grid-column:1}
+.video .x{grid-row:1/3;grid-column:2;color:var(--faint);font-size:20px;padding:6px 8px}
+.video .x:hover{color:var(--clay)}
+.coach{color:var(--amber)}
+
+/* ---- lecture ---- */
+#lecture .tete{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:var(--bg);z-index:5}
+#lecture .tete .titre{flex:1;min-width:180px;font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:18px;line-height:1.2}
+#lecture .tete .titre small{display:block;font-family:'Archivo',sans-serif;font-weight:400;font-size:12.5px;color:var(--muted)}
+.bascule{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.bascule button{padding:7px 13px;font-size:12.5px;color:var(--muted)}
+.bascule button.on{background:rgba(232,163,61,.12);color:var(--amber)}
+
+.scene{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:22px;padding:20px;max-width:1400px;margin:0 auto}
+.gauche{min-width:0}
+.cadre{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden}
+.cadre iframe,#lecteur{position:absolute;inset:0;width:100%;height:100%;border:0}
+.cadre video#lecteur{object-fit:contain;background:#000}
+.cadre audio#lecteur{top:auto;bottom:14px;left:14px;right:14px;width:calc(100% - 28px);height:44px}
+.cadre.audio{background:var(--surface)}
+.cadre.audio:before{content:attr(data-titre);position:absolute;left:22px;right:22px;top:22px;
+  font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:20px;line-height:1.25;color:var(--muted)}
+.cadre.survol{outline:2px dashed var(--amber);outline-offset:-6px}
+.cadre.cache{display:none}
+/* quand la vidéo est là, elle passe en haut : c'est elle qu'on regarde */
+.gauche{display:flex;flex-direction:column}
+body:not(.sans-video) .gauche .cadre{order:-1;margin-top:0 !important;margin-bottom:14px}
+body.sans-video #btnArrets{display:none}
+
+/* le lecteur à voix haute : le cœur de la page */
+#ecoute{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;
+  display:grid;grid-template-columns:auto 1fr;gap:4px 20px;align-items:center;
+  grid-template-areas:"modes modes" "btn quoi" "btn titre" "ctrl ctrl" "opt opt" "noter noter" "aide aide"}
+#modes{grid-area:modes} #btnEcoute{grid-area:btn} #ecouteQuoi{grid-area:quoi;align-self:end}
+#ecouteTitre{grid-area:titre;align-self:start} #ctrl{grid-area:ctrl} #optVideo{grid-area:opt}
+#rangNoter{grid-area:noter} #ecouteAide{grid-area:aide}
+#btnEcoute{width:74px;height:74px;border-radius:50%;background:var(--amber);color:#0E1216;
+  display:flex;align-items:center;justify-content:center;transition:transform .12s,filter .12s}
+#btnEcoute:hover{filter:brightness(1.07);transform:scale(1.04)}
+#btnEcoute svg{width:30px;height:30px}
+#ecouteQuoi{font-size:13px;color:var(--muted)}
+#ecouteTitre{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:22px;line-height:1.15}
+#ecoute .rang{margin-top:12px}
+#ecoute .rang .btn{padding:8px 14px;font-size:13px}
+#ecoute select{width:auto;padding:8px 12px;border-radius:999px;font-size:13px;color:var(--muted);background:var(--bg)}
+#ecouteAide{grid-column:1/-1;margin-top:4px}
+.lien{color:var(--muted);text-decoration:underline;text-underline-offset:3px;font-size:13px}
+.lien:hover{color:var(--amber)}
+.bloc.lu .v, .retenir.lu .v{color:var(--amber)}
+
+/* deux façons d'apprendre */
+#modes{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;justify-self:start;margin-bottom:14px}
+#modes button{padding:8px 15px;font-size:13px;color:var(--muted)}
+#modes button.on{background:rgba(232,163,61,.14);color:var(--amber)}
+#modes button:disabled{opacity:.4;cursor:default}
+#optVideo{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:13px;color:var(--muted)}
+#optVideo label{display:flex;gap:7px;align-items:center;cursor:pointer}
+#optVideo input{accent-color:var(--amber);width:16px;height:16px}
+
+/* sous-titres français par-dessus la vidéo */
+#soustitre{position:absolute;left:4%;right:4%;bottom:14%;text-align:center;pointer-events:none;z-index:3}
+#soustitre span{display:inline;background:rgba(14,18,22,.82);color:#fff;font-size:clamp(15px,2.1vw,22px);
+  line-height:1.5;padding:3px 10px;border-radius:6px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+#soustitre small{display:block;margin-top:6px}
+#soustitre small span{font-size:clamp(11px,1.3vw,14px);font-style:italic;color:#C8CDD2;background:rgba(14,18,22,.7)}
+body.en-seul #soustitre .stfr, body.fr-seul #soustitre small{display:none}
+body.sans-st #soustitre{display:none}
+.cadre.audio #soustitre{bottom:auto;top:34%}
+
+/* « pourquoi il dit ça ? » sur chaque ligne */
+.ligne{position:relative}
+.ligne .q{position:absolute;right:6px;top:6px;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);
+  color:var(--muted);font-weight:700;font-size:13px;background:var(--bg);opacity:0;transition:opacity .15s}
+.ligne:hover .q, .ligne.ici .q, .ligne .q.fait{opacity:1}
+.ligne .q.fait{border-color:var(--steel);color:var(--steel)}
+.ligne .q:hover{border-color:var(--amber);color:var(--amber)}
+.ligne > div{padding-right:30px}
+
+#question, #mesNotes{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+#question{border-left:3px solid var(--steel)}
+#question .cite{font-size:15px;padding-left:11px;border-left:2px solid var(--line);margin:8px 0 12px}
+#question .cite em{display:block;font-size:13px;color:var(--muted)}
+.titrebloc{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:18px}
+.note-t{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+.note-t:first-of-type{border-top:0}
+.note-t .h{font-family:'Archivo Narrow',sans-serif;font-weight:600;color:var(--amber);cursor:pointer;padding-top:2px}
+.note-t .ligneCitee{font-size:13px;color:var(--muted);grid-column:2}
+.note-t textarea{grid-column:2;min-height:56px}
+.note-t .x{color:var(--faint);font-size:18px;grid-row:1/3;grid-column:3}
+.note-t .x:hover{color:var(--clay)}
+#moment .bloc, #moment .retenir{transition:color .2s}
+#secours{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;
+  text-align:center;padding:24px;color:var(--muted);background:var(--surface)}
+#secours.on{display:flex}
+
+/* la frise : la vidéo découpée en mécaniques */
+#frise{display:flex;gap:2px;height:30px;margin-top:12px}
+#frise button{flex:1 1 0;min-width:6px;background:var(--line);border-radius:3px;position:relative}
+#frise button.vide{background:var(--raise)}
+#frise button:hover{background:var(--muted)}
+#frise button.ici{background:var(--amber)}
+#frise button.vu{background:rgba(121,191,149,.45)}
+#frise button.vu.ici{background:var(--amber)}
+
+/* la fiche du moment */
+#moment{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--amber);
+  border-radius:12px;padding:20px 22px}
+#moment .quand{font-size:12.5px;color:var(--muted)}
+#moment h3{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:24px;line-height:1.15;margin:4px 0 14px}
+.bloc{margin-top:12px}
+.bloc .k{font-size:12.5px;color:var(--muted)}
+.bloc .v{font-size:15px;margin-top:2px}
+.retenir{margin-top:16px;padding:12px 14px;border-radius:10px;background:rgba(232,163,61,.07)}
+.retenir .v{font-size:18px;line-height:1.45;font-weight:500}
+.piege .v{color:#E9B9AE}
+.sesmots .v{font-style:italic;color:var(--muted)}
+#maNote{min-height:70px;margin-top:6px}
+#moment.remplissage{border-left-color:var(--line)}
+
+/* la piste : l'élément signature */
+.droite{min-width:0;position:relative}
+#piste{position:sticky;top:78px;max-height:calc(100vh - 100px);overflow-y:auto;padding-right:6px;
+  scroll-behavior:smooth;overscroll-behavior:contain}
+#piste::-webkit-scrollbar{width:4px}
+#piste::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
+.ligne{display:grid;grid-template-columns:44px 1fr;gap:10px;padding:8px 10px 8px 0;border-radius:8px;cursor:pointer;
+  border-left:2px solid transparent;transition:background .2s}
+.ligne:hover{background:rgba(255,255,255,.025)}
+.ligne .h{font-family:'Archivo Narrow',sans-serif;font-weight:600;font-size:12px;color:var(--faint);padding-top:3px;text-align:right}
+.ligne .fr{font-size:15px;color:var(--muted)}
+.ligne .en{font-style:italic;font-size:13px;color:var(--faint);margin-top:2px}
+.ligne.voix{margin-top:10px;border-top:1px solid var(--line);padding-top:14px}
+.ligne.ici{background:rgba(232,163,61,.06);border-left-color:var(--amber)}
+.ligne.ici .fr{color:var(--ink);font-size:20px;line-height:1.4;font-weight:500}
+.ligne.ici .en{color:var(--muted);font-size:14px}
+.ligne.ici .h{color:var(--amber)}
+body.fr-seul .ligne .en{display:none}
+body.en-seul .ligne .fr{display:none}
+body.en-seul .ligne .en{font-style:normal;font-size:15px;color:var(--muted);margin-top:0}
+body.en-seul .ligne.ici .en{color:var(--ink);font-size:20px;line-height:1.4}
+.debmoment{font-family:'Archivo Narrow',sans-serif;font-weight:700;font-size:15px;color:var(--amber);
+  padding:18px 0 6px 54px;cursor:pointer}
+
+/* l'arrêt du coach */
+#arret{position:fixed;inset:0;background:rgba(14,18,22,.86);z-index:40;display:none;align-items:center;justify-content:center;padding:20px}
+#arret.on{display:flex}
+#arret .boite{max-width:620px;width:100%;background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--amber);
+  border-radius:14px;padding:24px;max-height:90vh;overflow-y:auto}
+
+#toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,90px);
+  background:var(--ink);color:var(--bg);padding:10px 20px;border-radius:999px;font-size:13.5px;font-weight:600;
+  transition:transform .25s,opacity .25s;z-index:60;pointer-events:none;opacity:0}
+#toast.on{transform:translate(-50%,0);opacity:1}
+
+@media (max-width:900px){
+  .scene{grid-template-columns:1fr;padding:14px}
+  #piste{position:static;max-height:60vh}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<!-- ============ BIBLIOTHÈQUE ============ -->
+<section id="biblio" class="on">
+  <div class="wrap">
+    <h1>Comprendre un coaching</h1>
+    <p class="intro">La vidéo, sa traduction qui défile avec la voix, et à chaque passage : ce que le coach fait, et pourquoi ça marche. Pour comprendre la mécanique au lieu de l'appliquer à l'aveugle.</p>
+    <div class="rang" style="margin-top:22px">
+      <button class="btn plein" id="btnAjout">Ajouter une vidéo</button>
+      <button class="btn" id="btnImportVideo">Importer une vidéo traduite</button>
+      <input type="file" id="fichierImport" accept=".json,application/json" hidden>
+      <button class="btn" id="btnReglages">Clé API</button>
+    </div>
+    <div id="liste" style="margin-top:22px"></div>
+    <p id="vide" class="note" style="margin-top:20px;display:none">Rien encore. Dépose ton premier transcript : les fichiers de ton scraping marchent tels quels, le lien de la vidéo est lu dans l'en-tête.</p>
+  </div>
+</section>
+
+<!-- ============ AJOUT ============ -->
+<section id="ajout">
+  <div class="wrap">
+    <h2>Ajouter une vidéo</h2>
+
+    <div class="panneau">
+      <span class="lbl" style="margin-top:0">Le transcript anglais</span>
+      <div id="depot">
+        <strong>Dépose le fichier ici</strong><br>
+        <span class="note">Celui de ton scraping, ou la transcription copiée depuis YouTube</span>
+        <input type="file" id="fichier" accept=".txt,.srt,.vtt,text/plain" hidden>
+      </div>
+      <span class="lbl">Ou colle le texte</span>
+      <textarea id="colle" placeholder="[00:00] We're going to jump into a sales call…"></textarea>
+      <p id="lecteurEtat" class="note" style="margin-top:8px"></p>
+
+      <label class="lbl" for="lien">Le lien YouTube</label>
+      <input type="text" id="lien" placeholder="https://www.youtube.com/watch?v=…">
+
+      <label class="lbl" for="titre">Titre</label>
+      <input type="text" id="titre" placeholder="Rempli automatiquement si le fichier le contient">
+
+      <span class="lbl">Le coach</span>
+      <div class="rang" id="choixCoach">
+        <button class="btn on" data-coach="josh lyons">Josh Lyons</button>
+        <button class="btn" data-coach="bill walsh">Bill Walsh</button>
+        <button class="btn" data-coach="ben byrne">Ben Byrne</button>
+        <button class="btn" data-coach="sami">Sami</button>
+        <button class="btn" data-coach="autre">Autre</button>
+      </div>
+      <input type="text" id="coachAutre" placeholder="Son nom" style="display:none;margin-top:9px">
+    </div>
+
+    <div class="rang" style="margin-top:18px">
+      <button class="btn plein" id="btnTraiter">Traduire et expliquer</button>
+      <button class="btn" id="btnAjoutRetour">Retour</button>
+    </div>
+
+    <div id="suivi" class="panneau" style="display:none">
+      <p id="suiviTxt">—</p>
+      <div class="barre"><i id="suiviBarre"></i></div>
+      <p id="suiviErr" class="err" style="margin-top:10px"></p>
+      <p class="note" style="margin-top:10px">Tu peux ouvrir la vidéo pendant le traitement : les passages déjà prêts s'affichent au fur et à mesure. Si ça s'interrompt, rien n'est perdu, tu pourras reprendre.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RÉGLAGES ============ -->
+<section id="reglages">
+  <div class="wrap">
+    <h2>Clé API</h2>
+    <div class="panneau">
+      <p class="note" style="margin-bottom:12px">La même que pour le copilote et Suivi R1. Si tu l'y as déjà mise et que ces fichiers sont au même endroit, elle est reprise toute seule. Elle reste sur ton appareil.</p>
+      <input type="password" id="cle" placeholder="sk-ant-…">
+      <div class="rang" style="margin-top:12px">
+        <button class="btn" id="btnCle">Enregistrer et tester</button>
+        <button class="btn" id="btnReglagesRetour">Retour</button>
+      </div>
+      <p id="cleEtat" class="note" style="margin-top:10px"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LECTURE ============ -->
+<section id="lecture">
+  <div class="tete">
+    <button class="btn" id="btnLectRetour">Bibliothèque</button>
+    <div class="titre"><span id="lTitre">—</span><small id="lSous">—</small></div>
+    <div class="bascule" id="langue" role="group" aria-label="Langue du texte">
+      <button data-l="deux" class="on">Les deux</button>
+      <button data-l="fr">Français</button>
+      <button data-l="en">Anglais</button>
+    </div>
+    <button class="btn on" id="btnArrets" title="Le coach arrête la vidéo à la fin de chaque passage important">Le coach m'arrête</button>
+    <button class="btn" id="btnDossier" title="Tout : traduction, explications et tes notes, dans un seul document">Télécharger</button>
+    <button class="btn" id="btnMenu">Plus</button>
+  </div>
+
+  <div id="menu" class="panneau" style="display:none;margin:12px 20px 0">
+    <div class="rang">
+      <button class="btn" id="btnReprendre">Reprendre le traitement</button>
+      <button class="btn" id="btnMedia2">Utiliser une vidéo téléchargée</button>
+      <button class="btn" id="btnDossier2">Télécharger le dossier complet</button>
+      <button class="btn" id="btnTxt">Télécharger la traduction seule</button>
+      <button class="btn" id="btnExport">Exporter en fiches pour le copilote</button>
+      <button class="btn" id="btnExportVideo">Exporter cette vidéo vers un autre appareil</button>
+    </div>
+    <p class="note" style="margin-top:10px">Le dossier complet contient tout : les explications, la traduction ligne par ligne, et tes notes. Il s'ouvre dans ton navigateur ou dans Word, et s'imprime.<br>Les fiches se chargent dans le copilote avec « Ajouter à ma base ». Jamais dans la zone de dépôt : elle remplace toute ta base.</p>
+  </div>
+
+  <div class="scene">
+    <div class="gauche">
+      <div id="ecoute">
+        <div id="modes" role="group" aria-label="Façon d'apprendre">
+          <button data-mode="video" id="modeVideo">Vidéo en français</button>
+          <button data-mode="lecon" id="modeLecon" class="on">Leçon expliquée</button>
+        </div>
+        <button id="btnEcoute" aria-label="Écouter"></button>
+        <div id="ecouteQuoi">Appuie pour écouter</div>
+        <div id="ecouteTitre">—</div>
+        <div class="rang" id="ctrl">
+          <button class="btn" id="btnPrec">Passage précédent</button>
+          <button class="btn" id="btnSuiv">Passage suivant</button>
+          <select id="vitesse" aria-label="Vitesse de lecture">
+            <option value="0.9">Lent</option>
+            <option value="1" selected>Normal</option>
+            <option value="1.15">Rapide</option>
+            <option value="1.3">Très rapide</option>
+          </select>
+        </div>
+        <div id="optVideo" style="display:none">
+          <label><input type="checkbox" id="optVoixFr" checked> Voix française</label>
+          <label><input type="checkbox" id="optSt" checked> Sous-titres</label>
+          <label><input type="checkbox" id="optAttendre" checked> Attendre la fin de chaque traduction</label>
+        </div>
+        <div class="rang" id="rangNoter">
+          <button class="btn" id="btnNoter">Noter ce moment</button>
+        </div>
+        <p id="ecouteAide" class="note"></p>
+      </div>
+      <div class="cadre cache" style="margin-top:14px">
+        <div id="lecteur"></div>
+        <div id="soustitre" aria-live="polite"></div>
+        <div id="secours"><p id="secoursTxt"></p><a id="secoursLien" hidden></a></div>
+      </div>
+      <div id="frise" aria-label="Les passages de la vidéo"></div>
+      <div id="moment"></div>
+      <div id="question" style="display:none"></div>
+      <div id="mesNotes" style="display:none"></div>
+    </div>
+    <div class="droite">
+      <div id="piste"></div>
+    </div>
+  </div>
+</section>
+
+<div id="arret"><div class="boite" id="arretBoite"></div></div>
+<input type="file" id="fichierMedia" accept="video/*,audio/*,.mp4,.m4a,.webm,.mp3,.mkv,.mov" hidden>
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   OUTILS
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const MODELE = "claude-sonnet-4-6";
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast._t); toast._t=setTimeout(()=>e.classList.remove("on"),2200); }
+function hms(s){
+  if(s == null || isNaN(s)) return "";
+  s = Math.floor(s);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), x = s%60;
+  return (h ? h+":"+String(m).padStart(2,"0") : m) + ":" + String(x).padStart(2,"0");
+}
+function montre(id){
+  document.querySelectorAll("section").forEach(s=>s.classList.remove("on"));
+  $(id).classList.add("on"); window.scrollTo(0,0);
+}
+
+/* =====================================================================
+   STOCKAGE — mêmes couches que le copilote et Suivi R1.
+   Chaque vidéo a sa propre clé : une vidéo de trois heures ne doit pas
+   empêcher d'enregistrer les autres.
+   ===================================================================== */
+function idb(mode, fn){
+  return new Promise((res,rej)=>{
+    const o = indexedDB.open("comprendre_coaching",1);
+    o.onupgradeneeded = () => o.result.createObjectStore("kv",{keyPath:"k"});
+    o.onerror = () => rej(o.error);
+    o.onsuccess = () => {
+      const t = o.result.transaction("kv",mode), r = fn(t.objectStore("kv"));
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    };
+  });
+}
+const Store = {
+  async get(k){
+    if(window.storage){ try{ const r=await window.storage.get(k,false); if(r) return JSON.parse(r.value); }catch(e){} }
+    try{ const r=await idb("readonly", s=>s.get(k)); if(r) return r.v; }catch(e){}
+    try{ const r=localStorage.getItem("cc_"+k); if(r) return JSON.parse(r); }catch(e){}
+    return null;
+  },
+  async set(k,v){
+    if(window.storage){ try{ await window.storage.set(k,JSON.stringify(v),false); return true }catch(e){} }
+    try{ await idb("readwrite", s=>s.put({k,v})); return true }catch(e){}
+    try{ localStorage.setItem("cc_"+k, JSON.stringify(v)); return true }catch(e){}
+    return false;
+  },
+  async del(k){
+    if(window.storage){ try{ await window.storage.delete(k,false); }catch(e){} }
+    try{ await idb("readwrite", s=>s.delete(k)); }catch(e){}
+    try{ localStorage.removeItem("cc_"+k); }catch(e){}
+  }
+};
+
+/* =====================================================================
+   APPEL AU MODÈLE
+   ===================================================================== */
+let API_KEY = "";
+async function demande(prompt, maxJetons){
+  const h = {"Content-Type":"application/json"};
+  if(API_KEY){
+    h["x-api-key"] = API_KEY;
+    h["anthropic-version"] = "2023-06-01";
+    h["anthropic-dangerous-direct-browser-access"] = "true";
+  }
+  let r;
+  try{
+    r = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST", headers:h,
+      body:JSON.stringify({model:MODELE, max_tokens:maxJetons||4000, messages:[{role:"user",content:prompt}]})
+    });
+  }catch(e){
+    throw new Error(API_KEY ? "Pas de réseau." : "Il manque ta clé API : bouton « Clé API » sur l'accueil.");
+  }
+  if(!r.ok){
+    const codes = {401:"Clé API invalide.",403:"Clé sans accès.",429:"TROP",400:"Requête refusée.",529:"TROP"};
+    const e = new Error(codes[r.status] || ("Erreur "+r.status)); e.status = r.status; throw e;
+  }
+  const d = await r.json();
+  const t = (d.content||[]).map(c=>c.text||"").join("");
+  if(!t.trim()) throw new Error("Réponse vide.");
+  return t;
+}
+function litJson(txt){
+  let t = String(txt).replace(/```json|```/g,"").trim();
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if(a < 0 || b <= a) throw new Error("Réponse illisible.");
+  t = t.slice(a, b+1);
+  try{ return JSON.parse(t); }catch(e){}
+  return JSON.parse(t.replace(/,(\s*[}\]])/g,"$1"));   // virgules en trop
+}
+
+/* =====================================================================
+   LECTURE DU TRANSCRIPT
+   Trois formats reconnus :
+   - « [00:12] texte »            (ton scraping)
+   - « 0:12 » puis texte dessous  (copie depuis YouTube)
+   - « 0:1212 secondesTexte »     (copie depuis YouTube en français)
+   Et un texte sans aucune heure, qui se lit sans synchronisation.
+   ===================================================================== */
+const PARASITES = /^(transcription|transcript|rechercher dans la vid[ée]o|search in video|synchroniser avec la vid[ée]o|sync to video time|afficher la transcription|show transcript)$/i;
+const DUREE = /^(\d+\s*(heures?|hours?)[,\s]*(et\s+|and\s+)?)?(\d+\s*(minutes?)[,\s]*(et\s+|and\s+)?)?(\d+\s*(secondes?|seconds?))?/i;
+
+function enSecondes(s){
+  const p = s.split(":").map(Number);
+  return p.length === 3 ? p[0]*3600 + p[1]*60 + p[2] : p[0]*60 + p[1];
+}
+
+function litTranscript(brut){
+  const lignes = brut.replace(/\r/g,"").split("\n");
+  const meta = {titre:null, url:null, chaine:null};
+  const items = [];
+  let t = null, attend = false, vuHeure = false;
+
+  for(let l of lignes){
+    l = l.trim();
+    if(!l) continue;
+    if(l.startsWith("#")){
+      const x = l.replace(/^#\s*/,"");
+      if(/^https?:\/\//.test(x)) meta.url = x;
+      else if(/^channel:/i.test(x)) meta.chaine = x.replace(/^channel:\s*/i,"").trim();
+      else if(!/^(source|channel id)\b/i.test(x) && !meta.titre) meta.titre = x;
+      continue;
+    }
+    if(PARASITES.test(l)) continue;
+
+    const m = l.match(/^\[?(\d{1,2}:\d{2}(?::\d{2})?)\]?\s*(.*)$/);
+    if(m){
+      vuHeure = true;
+      t = enSecondes(m[1]);
+      const reste = m[2].replace(DUREE,"").trim();
+      if(reste){ items.push({t, en:reste}); attend = false; }
+      else attend = true;
+      continue;
+    }
+    const texte = l.replace(DUREE,"").trim();
+    if(!texte) continue;
+    if(attend || !items.length){ items.push({t: t ?? (vuHeure ? 0 : null), en:texte}); attend = false; }
+    else items[items.length-1].en += " " + texte;
+  }
+
+  // Aucune heure du tout : on découpe en phrases, lecture sans synchronisation.
+  if(!vuHeure){
+    const tout = items.map(x=>x.en).join(" ");
+    return {meta, items: (tout.match(/[^.!?]+[.!?]+|\S[^.!?]*$/g) || []).map(p=>({t:null, en:p.trim()})).filter(x=>x.en)};
+  }
+  // Une ligne arrivée avant la première heure (copie YouTube qui saute le 0:00) :
+  // on lui donne l'heure de départ, sinon toute la synchronisation tombe.
+  let premier = items.find(x=>x.t != null);
+  items.forEach(x=>{ if(x.t == null) x.t = premier ? Math.min(premier.t, 0) : 0; });
+  return {meta, items: dedoublonne(items)};
+}
+
+/* Les sous-titres automatiques répètent chaque bout de phrase deux ou
+   trois fois en glissant. On garde chaque mot une seule fois. */
+function mots(s){ return s.toLowerCase().replace(/[^a-z0-9'\s]/g," ").split(/\s+/).filter(Boolean); }
+function dedoublonne(items){
+  const out = [];
+  for(const it of items){
+    const prev = out[out.length-1];
+    if(!prev){ out.push({...it}); continue; }
+    const a = prev.en.trim(), b = it.en.trim();
+    const na = mots(a).join(" "), nb = mots(b).join(" ");
+    if(!nb || na === nb || na.includes(nb)) continue;
+    if(nb.startsWith(na)){ prev.en = b; continue; }
+    // recouvrement : la fin de la précédente = le début de celle-ci
+    const wa = mots(a), wb = b.split(/\s+/), wbn = mots(b);
+    let k = Math.min(wa.length, wbn.length);
+    for(; k >= 3; k--){
+      if(wa.slice(-k).join(" ") === wbn.slice(0,k).join(" ")) break;
+    }
+    if(k >= 3){
+      const suite = wb.slice(k).join(" ").trim();
+      if(suite) out.push({t:it.t, en:suite});
+      continue;
+    }
+    out.push({...it});
+  }
+  return out;
+}
+
+/* On regroupe les lignes en phrases lisibles, puis en passages d'environ
+   deux minutes et demie — l'unité qu'on explique. */
+function assemble(items){
+  const segs = [];
+  let cur = null;
+  const ferme = () => { if(cur){ cur.en = cur.en.replace(/\s+/g," ").trim(); if(cur.en) segs.push(cur); cur = null; } };
+  let dernierT = null;
+  for(const it of items){
+    let txt = it.en, voix = false;
+    if(/^>>/.test(txt)){ voix = true; txt = txt.replace(/^>>\s*/,""); }
+    if(voix) ferme();
+    // un blanc de plus de six secondes coupe la phrase : sinon deux moments
+    // éloignés de la vidéo se retrouvent collés sur la même ligne
+    if(cur && it.t != null && dernierT != null && it.t - dernierT > 6) ferme();
+    dernierT = it.t;
+    if(!cur) cur = {t:it.t, en:"", voix};
+    const avant = cur.en;
+    cur.en += (avant ? " " : "") + txt;
+    const n = cur.en.split(/\s+/).length;
+    const fin = /[.!?]["')\]]?\s*$/.test(cur.en);
+    if((fin && n >= 10) || n >= 32) ferme();
+  }
+  ferme();
+  return segs;
+}
+function decoupe(segs){
+  const moments = [];
+  let debut = 0, mots = 0;
+  const sync = segs.length && segs[0].t != null;
+  for(let i = 0; i < segs.length; i++){
+    mots += segs[i].en.split(/\s+/).length;
+    const d = sync ? (segs[i].t - segs[debut].t) : 0;
+    const fin = /[.!?]["')\]]?\s*$/.test(segs[i].en);
+    const assez = sync ? ((d >= 140 && fin) || d >= 210 || mots >= 620) : mots >= 420;
+    if(assez || i === segs.length-1){
+      moments.push({a:debut, b:i, debut: segs[debut].t, fin: segs[i+1] ? segs[i+1].t : (segs[i].t != null ? segs[i].t + 8 : null)});
+      debut = i+1; mots = 0;
+    }
+  }
+  return moments;
+}
+
+/* Garde-fou : le transcript ben byrne était en tongien. On prévient. */
+function sembleAnglais(items){
+  const w = mots(items.slice(0,120).map(x=>x.en).join(" "));
+  if(w.length < 40) return true;
+  const courants = new Set(["the","and","you","to","a","is","that","it","of","i","in","what","this","so","do","are","we","like","just","your","for","not","be","have"]);
+  return w.filter(x=>courants.has(x)).length / w.length > 0.12;
+}
+
+/* =====================================================================
+   L'AJOUT
+   ===================================================================== */
+let COACH = "josh lyons";
+let PREP = null;   // le transcript lu, prêt à traiter
+
+document.querySelectorAll("[data-coach]").forEach(b=>{
+  b.onclick = () => {
+    document.querySelectorAll("[data-coach]").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on"); COACH = b.dataset.coach;
+    $("coachAutre").style.display = COACH === "autre" ? "block" : "none";
+  };
+});
+function choisitCoach(nom){
+  const n = (nom||"").toLowerCase();
+  const k = n.includes("lyons") ? "josh lyons" : n.includes("walsh") ? "bill walsh" :
+            n.includes("byrne") ? "ben byrne" : n.includes("sami") ? "sami" : null;
+  if(k){ const b = document.querySelector(`[data-coach="${k}"]`); if(b) b.click(); }
+}
+
+function prepare(texte){
+  const r = litTranscript(texte);
+  PREP = r;
+  if(r.meta.url && !$("lien").value) $("lien").value = r.meta.url;
+  if(r.meta.titre && !$("titre").value) $("titre").value = r.meta.titre;
+  if(r.meta.chaine) choisitCoach(r.meta.chaine);
+  const n = r.items.length;
+  if(!n){ $("lecteurEtat").innerHTML = '<span class="err">Je n\'ai rien trouvé à lire dans ce texte.</span>'; return; }
+  const sync = r.items[0].t != null;
+  const duree = sync ? hms(r.items[n-1].t) : null;
+  let msg = `${n} lignes lues` + (duree ? `, environ ${duree} de vidéo.` : ", sans horodatage : la lecture ne sera pas synchronisée.");
+  if(!sembleAnglais(r.items)) msg += ' <span class="err">Attention : ce texte ne ressemble pas à de l\'anglais. Si c\'est une traduction automatique de YouTube, le résultat sera inexploitable.</span>';
+  $("lecteurEtat").innerHTML = msg;
+}
+
+$("depot").onclick = () => $("fichier").click();
+$("depot").ondragover = e => { e.preventDefault(); $("depot").classList.add("survol"); };
+$("depot").ondragleave = () => $("depot").classList.remove("survol");
+$("depot").ondrop = e => { e.preventDefault(); $("depot").classList.remove("survol"); if(e.dataTransfer.files[0]) litFichier(e.dataTransfer.files[0]); };
+$("fichier").onchange = () => { if($("fichier").files[0]) litFichier($("fichier").files[0]); };
+async function litFichier(f){
+  const t = await f.text();
+  $("colle").value = t;
+  if(!$("titre").value) $("titre").value = f.name.replace(/^\d+_/,"").replace(/_+/g," ").replace(/\.[a-z]+$/i,"").replace(/\s*[A-Za-z0-9_-]{11}\s*$/,"").trim();
+  prepare(t);
+}
+$("colle").addEventListener("input", () => { clearTimeout(prepare._t); prepare._t = setTimeout(()=> $("colle").value.trim() && prepare($("colle").value), 400); });
+
+function idVideo(url){
+  const u = String(url||"");
+  const m = u.match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+$("btnAjout").onclick = () => {
+  $("colle").value = ""; $("lien").value = ""; $("titre").value = ""; $("lecteurEtat").textContent = "";
+  $("suivi").style.display = "none"; PREP = null;
+  montre("ajout");
+};
+$("btnAjoutRetour").onclick = () => { montre("biblio"); rendBiblio(); };
+
+$("btnTraiter").onclick = async () => {
+  if(!PREP && $("colle").value.trim()) prepare($("colle").value);
+  if(!PREP || !PREP.items.length) return toast("Dépose ou colle d'abord un transcript");
+  const segs = assemble(PREP.items);
+  const moments = decoupe(segs);
+  const coach = COACH === "autre" ? ($("coachAutre").value.trim().toLowerCase() || "autre") : COACH;
+  const v = {
+    id: "v" + Date.now(),
+    titre: $("titre").value.trim() || "Vidéo sans titre",
+    coach, url: $("lien").value.trim(), videoId: idVideo($("lien").value),
+    cree: new Date().toISOString(),
+    segs: segs.map(s=>({t:s.t, en:s.en, voix:s.voix||false, fr:null})),
+    moments: moments.map(m=>({...m, fait:false})),
+    notes: {}
+  };
+  await sauveVideo(v);
+  traite(v, true);
+};
+
+/* =====================================================================
+   LE TRAITEMENT — un appel par passage, trois en parallèle.
+   Chaque passage est enregistré dès qu'il est prêt : si ça coupe,
+   on reprend là où on en était.
+   ===================================================================== */
+const SUJETS = "CADRAGE, DECOUVERTE, DOULEUR, TENTATIVES, INACTION, ENGAGEMENT, PROFIL_EXPERT, PITCH, PRIX, MOYENS, REFLEXION, PEUR, CONJOINT, TIMING, TEMPS, DEJA, DOC, DECIDEUR, PREUVE, PAIEMENT, CLOSING, OBJECTION, AUTRE";
+
+function consigne(v, m){
+  const lignes = [];
+  for(let i = m.a; i <= m.b; i++){
+    const s = v.segs[i];
+    lignes.push(`${i}. ${s.voix ? "[autre voix] " : ""}${s.en}`);
+  }
+  return `Tu aides un closer francophone à COMPRENDRE la méthode d'un coach de vente anglophone : ${v.coach}. Il ne veut pas appliquer des phrases à l'aveugle, il veut saisir la mécanique pour progresser.
+
+Voici un passage de la vidéo « ${v.titre} »${m.debut != null ? `, de ${hms(m.debut)} à ${hms(m.fin)}` : ""}. Les lignes sont numérotées. C'est un sous-titrage automatique : il y a des erreurs de reconnaissance, des phrases coupées, et souvent plusieurs voix — le coach, un élève, un prospect dans un jeu de rôle ou dans un appel qu'il analyse. « [autre voix] » signale un changement de personne. Reconstitue le sens.
+
+${lignes.join("\n")}
+
+TÂCHE 1 — TRADUIRE
+Chaque ligne en français parlé et naturel, par le sens, jamais mot à mot. Tutoiement. Garde l'énergie et le franc-parler du coach : s'il est direct, sois direct. Corrige les erreurs de reconnaissance évidentes. Quand le coach emploie un terme technique qui lui est propre, donne-le la première fois en français suivi de l'anglais entre parenthèses, par exemple « verrouillage (tie-down) ». Garde exactement les mêmes numéros.
+
+TÂCHE 2 — FAIRE COMPRENDRE
+Explique ce passage comme un mentor qui parle à un closer qui veut progresser. Phrases courtes, zéro jargon, des images du quotidien si ça aide.
+- "titre" : la mécanique en trois à sept mots.
+- "se_passe" : ce qui se passe concrètement ici. Qui parle, jeu de rôle ou revue d'appel, à quel moment du call on se trouve.
+- "mecanique" : le principe que le coach applique ou enseigne, en une ou deux phrases simples.
+- "pourquoi" : pourquoi ça marche sur un prospect. Le ressort humain, pas la technique.
+- "a_retenir" : la formulation à garder, adaptée en français parlé. null s'il n'y en a pas.
+- "dicible" : true si "a_retenir" est une phrase à dire au prospect, false si c'est un principe pour le closer.
+- "citation" : la phrase du coach en anglais, telle quelle, qui résume le passage. Vingt mots maximum. null si rien ne s'y prête.
+- "piege" : l'erreur que ce passage apprend à éviter. null s'il n'y en a pas.
+- "pourquoi_ici" : pourquoi le coach le fait À CE MOMENT PRÉCIS du call, et pas avant ou après. Ce que le moment prépare pour la suite. null si ce n'est pas un moment de call.
+- "sinon" : ce qui se passe concrètement dans l'appel si le closer ne le fait pas, ou fait ce que font la plupart des closers à la place.
+- "sujet" : un seul code parmi : ${SUJETS}.
+Si le passage est du remplissage — introduction, promotion, bavardage, logistique — mets "titre" à null et résume en une ligne dans "se_passe".
+
+Réponds UNIQUEMENT avec ce JSON, sans texte autour :
+{"lignes":[{"i":${m.a},"fr":"..."}],"moment":{"titre":"...","se_passe":"...","mecanique":"...","pourquoi":"...","a_retenir":"...","dicible":true,"citation":"...","piege":"...","pourquoi_ici":"...","sinon":"...","sujet":"..."}}`;
+}
+
+let EN_COURS = null;
+async function traite(v, afficher){
+  if(EN_COURS === v.id) return;
+  EN_COURS = v.id;
+  const reste = v.moments.map((m,i)=>i).filter(i=>!v.moments[i].fait);
+  const total = v.moments.length;
+  const suivi = () => {
+    const faits = v.moments.filter(m=>m.fait).length;
+    if(afficher){
+      $("suivi").style.display = "block";
+      $("suiviTxt").textContent = faits === total ? "C'est prêt." : `Passage ${faits} sur ${total}…`;
+      $("suiviBarre").style.width = (faits/total*100) + "%";
+    }
+    if(VID && VID.id === v.id){ rendFrise(); rendPiste(); majMoment(true); }
+  };
+  suivi();
+  if(afficher) $("suiviErr").textContent = "";
+
+  let file = reste.slice(), erreur = null;
+  async function ouvrier(){
+    while(file.length && !erreur){
+      const i = file.shift();
+      const m = v.moments[i];
+      let essais = 0;
+      while(true){
+        try{
+          const j = litJson(await demande(consigne(v, m), 4000));
+          (j.lignes||[]).forEach(x=>{
+            const k = Number(x.i);
+            if(k >= m.a && k <= m.b && x.fr) v.segs[k].fr = String(x.fr);
+          });
+          Object.assign(m, j.moment || {}, {fait:true});
+          await sauveVideo(v);
+          suivi();
+          break;
+        }catch(e){
+          essais++;
+          if((e.message === "TROP" || e.status === 529) && essais <= 4){ await new Promise(r=>setTimeout(r, 15000*essais)); continue; }
+          if(essais <= 1 && !e.status){ continue; }            // une réponse illisible : on retente une fois
+          erreur = e.status === 401 || e.status === 403 || /clé/i.test(e.message) ? e : null;
+          if(!erreur){ m.echec = e.message; break; }          // on passe au suivant, on reviendra
+          break;
+        }
+      }
+    }
+  }
+  await Promise.all([ouvrier(), ouvrier(), ouvrier()]);
+  EN_COURS = null;
+  const faits = v.moments.filter(m=>m.fait).length;
+  if(afficher){
+    if(erreur) $("suiviErr").textContent = erreur.message;
+    else if(faits < total) $("suiviErr").textContent = `${total-faits} passage(s) n'ont pas pu être traités. Ouvre la vidéo, puis « Plus » et « Reprendre le traitement ».`;
+    else { $("suiviTxt").textContent = "C'est prêt."; setTimeout(()=>ouvre(v.id), 700); }
+  }
+  if(erreur && !afficher) toast(erreur.message);
+  await rendBiblio();
+}
+
+/* =====================================================================
+   BIBLIOTHÈQUE
+   ===================================================================== */
+async function index(){ return (await Store.get("index")) || []; }
+async function sauveVideo(v){
+  await Store.set("video:"+v.id, v);
+  const ix = await index();
+  const e = {id:v.id, titre:v.titre, coach:v.coach, cree:v.cree,
+             total:v.moments.length, faits:v.moments.filter(m=>m.fait).length,
+             duree: v.segs.length && v.segs[v.segs.length-1].t != null ? v.segs[v.segs.length-1].t : null};
+  const k = ix.findIndex(x=>x.id===v.id);
+  if(k >= 0) ix[k] = e; else ix.unshift(e);
+  await Store.set("index", ix);
+}
+async function rendBiblio(){
+  const ix = await index();
+  $("vide").style.display = ix.length ? "none" : "block";
+  const nom = c => ({"josh lyons":"Josh Lyons","bill walsh":"Bill Walsh","ben byrne":"Ben Byrne","sami":"Sami"}[c] || c);
+  $("liste").innerHTML = ix.map(e=>`
+    <div class="video" data-id="${esc(e.id)}">
+      <div class="t">${esc(e.titre)}</div>
+      <div class="m"><span class="coach">${esc(nom(e.coach))}</span>${e.duree!=null ? " — "+hms(e.duree) : ""} — ${e.faits === e.total ? e.total+" passages expliqués" : e.faits+" sur "+e.total+" passages prêts"}</div>
+      <button class="x" data-suppr="${esc(e.id)}" aria-label="Supprimer">×</button>
+    </div>`).join("");
+  document.querySelectorAll(".video").forEach(el=>{
+    el.onclick = ev => {
+      if(ev.target.dataset.suppr) return;
+      ouvre(el.dataset.id);
+    };
+  });
+  document.querySelectorAll("[data-suppr]").forEach(b=>{
+    b.onclick = async ev => {
+      ev.stopPropagation();
+      if(!confirm("Supprimer cette vidéo et sa traduction ?")) return;
+      await Store.del("video:"+b.dataset.suppr);
+      await Store.set("index", (await index()).filter(x=>x.id !== b.dataset.suppr));
+      rendBiblio();
+    };
+  });
+}
+
+/* =====================================================================
+   LA LECTURE
+   ===================================================================== */
+let VID = null, PLAYER = null, PRET = false, TIC = null;
+let MEDIA = null;   // la vidéo déposée, quand YouTube refuse de s'afficher
+
+/* Un seul pilote pour les deux sources. Le reste du code ne sait pas
+   si la voix vient de YouTube ou d'un fichier sur ton ordinateur. */
+const Lecteur = {
+  pret(){ return !!MEDIA || PRET; },
+  temps(){
+    if(MEDIA) return MEDIA.currentTime || 0;
+    try{ return PLAYER && PLAYER.getCurrentTime ? PLAYER.getCurrentTime() : 0; }catch(e){ return 0; }
+  },
+  aller(t){
+    if(MEDIA){ try{ MEDIA.currentTime = Math.max(0, t); }catch(e){} return; }
+    if(PRET){ try{ PLAYER.seekTo(Math.max(0, t), true); }catch(e){} }
+  },
+  lire(){
+    if(typeof arreteVoix === "function" && Voix.actif) arreteVoix();
+    if(MEDIA){ const p = MEDIA.play(); if(p && p.catch) p.catch(()=>{}); return; }
+    if(PRET){ try{ PLAYER.playVideo(); }catch(e){} }
+  },
+  pause(){
+    if(MEDIA){ try{ MEDIA.pause(); }catch(e){} return; }
+    if(PRET){ try{ PLAYER.pauseVideo(); }catch(e){} }
+  },
+  enLecture(){
+    if(MEDIA) return !MEDIA.paused && !MEDIA.ended;
+    try{ return PRET && PLAYER.getPlayerState && PLAYER.getPlayerState() === 1; }catch(e){ return false; }
+  },
+  volume(v){
+    if(MEDIA){ try{ MEDIA.volume = Math.max(0, Math.min(1, v/100)); }catch(e){} return; }
+    if(PRET){ try{ PLAYER.setVolume(v); }catch(e){} }
+  }
+};
+
+function libereMedia(){
+  if(MEDIA){
+    try{ MEDIA.pause(); }catch(e){}
+    try{ if(MEDIA.src && MEDIA.src.startsWith("blob:")) URL.revokeObjectURL(MEDIA.src); }catch(e){}
+    MEDIA = null;
+  }
+  const c = document.querySelector(".cadre");
+  if(c){ c.classList.remove("audio"); c.removeAttribute("data-titre"); }
+}
+
+/* Charger la vidéo déposée. On essaie de la garder sur l'ordinateur
+   pour ne pas avoir à la redéposer la prochaine fois. */
+async function chargeMedia(f, garder){
+  if(!f || !VID) return;
+  clearInterval(TIC);
+  if(PLAYER && PLAYER.destroy){ try{ PLAYER.destroy(); }catch(e){} PLAYER = null; }
+  PRET = false;
+  libereMedia();
+  $("secours").classList.remove("on");
+
+  const audio = (f.type || "").startsWith("audio") || /\.(m4a|mp3|wav|ogg|opus|aac)$/i.test(f.name || "");
+  const el = document.createElement(audio ? "audio" : "video");
+  el.id = "lecteur"; el.controls = true; el.preload = "auto";
+  el.setAttribute("playsinline", "");
+  el.src = URL.createObjectURL(f);
+  $("lecteur").replaceWith(el);
+  MEDIA = el;
+  const cadre = document.querySelector(".cadre");
+  cadre.classList.remove("cache");
+  document.body.classList.remove("sans-video");
+  cadre.classList.toggle("audio", audio);
+  if(audio) cadre.setAttribute("data-titre", VID.titre);
+
+  el.onloadedmetadata = () => {
+    // garde-fou : un fichier qui ne correspond pas au transcript
+    const fin = VID.segs.length ? VID.segs[VID.segs.length-1].t : null;
+    if(fin != null && isFinite(el.duration) && Math.abs(el.duration - fin) > 180)
+      toast("Attention : la durée ne correspond pas au transcript. Vérifie que c'est la bonne vidéo.");
+  };
+  el.onpause = () => { if(!DUB.pauseParNous) coupeDub(); majBoutonVoix(); };
+  el.onplay  = () => majBoutonVoix();
+  setTimeout(videoDispo, 0);
+  el.onerror = () => {
+    libereMedia();
+    secours("Ce fichier ne se lit pas dans le navigateur. Essaie un fichier .mp4 ou .m4a.");
+  };
+  TIC = setInterval(tic, 250);
+
+  if(garder){
+    try{
+      await idb("readwrite", st => st.put({k:"media:"+VID.id, v:f}));
+      VID.media = f.name; await sauveVideo(VID);
+      toast("Vidéo chargée. Elle restera là la prochaine fois.");
+    }catch(e){
+      toast("Vidéo chargée. Trop lourde pour être gardée : il faudra la redéposer la prochaine fois.");
+    }
+  }
+}
+async function mediaGarde(id){
+  try{ const r = await idb("readonly", st => st.get("media:"+id)); return r ? r.v : null; }
+  catch(e){ return null; }
+}
+let ICI_SEG = -1, ICI_MOM = -1, VUS = new Set(), ARRETS = true, SCROLL_MAIN = 0;
+
+async function ouvre(id){
+  const v = await Store.get("video:"+id);
+  if(!v) return toast("Vidéo introuvable");
+  if(typeof arreteVoix === "function") arreteVoix();
+  Voix.mi = -1; Voix.file = []; Voix.pos = 0;
+  VID = v; ICI_SEG = -1; ICI_MOM = -1; VUS = new Set();
+  $("lTitre").textContent = v.titre;
+  const nom = ({"josh lyons":"Josh Lyons","bill walsh":"Bill Walsh","ben byrne":"Ben Byrne","sami":"Sami"}[v.coach] || v.coach);
+  const faits = v.moments.filter(m=>m.fait).length;
+  $("lSous").textContent = nom + " — " + (faits === v.moments.length ? v.moments.length + " passages" : faits + " sur " + v.moments.length + " passages prêts");
+  $("menu").style.display = "none";
+  montre("lecture");
+  rendFrise(); rendPiste(); majMoment(true);
+  document.querySelector(".cadre").classList.add("cache");
+  document.body.classList.add("sans-video");
+  coupeDub(); MODE = "lecon";
+  $("modeVideo").disabled = true;
+  document.querySelectorAll("#modes button").forEach(b => b.classList.toggle("on", b.dataset.mode === "lecon"));
+  $("optVideo").style.display = "none"; $("btnPrec").style.display = $("btnSuiv").style.display = "";
+  $("question").style.display = "none"; $("soustitre").innerHTML = "";
+  calculeLocuteurs(); rendNotes(); majAide();
+  majBoutonVoix();
+  demarreLecteur();
+  if(faits < v.moments.length && EN_COURS !== v.id) toast("Des passages ne sont pas encore prêts : « Plus », puis « Reprendre »");
+}
+
+function rendFrise(){
+  const v = VID; if(!v) return;
+  const sync = v.moments.length && v.moments[0].debut != null;
+  $("frise").innerHTML = v.moments.map((m,i)=>{
+    const poids = sync ? Math.max(1, (m.fin||m.debut+10) - m.debut) : (m.b - m.a + 1);
+    const cls = [!m.fait || !m.titre ? "vide" : "", i === ICI_MOM ? "ici" : "", VUS.has(i) ? "vu" : ""].join(" ");
+    return `<button class="${cls}" style="flex-grow:${poids}" data-m="${i}" title="${esc((m.titre||"passage "+(i+1)) + (m.debut!=null ? " — "+hms(m.debut) : ""))}" aria-label="${esc(m.titre||"passage "+(i+1))}"></button>`;
+  }).join("");
+  $("frise").querySelectorAll("button").forEach(b=> b.onclick = () => allerMoment(+b.dataset.m));
+}
+
+function rendPiste(){
+  const v = VID; if(!v) return;
+  let html = "";
+  v.moments.forEach((m,mi)=>{
+    if(m.titre) html += `<div class="debmoment" data-m="${mi}">${esc(m.titre)}</div>`;
+    for(let i = m.a; i <= m.b; i++){
+      const s = v.segs[i];
+      const dejaQ = VID.questions && VID.questions[i];
+      html += `<div class="ligne${s.voix ? " voix" : ""}" data-i="${i}">
+        <span class="h">${s.t != null ? hms(s.t) : ""}</span>
+        <div><div class="fr">${esc(s.fr || s.en)}</div>${s.fr ? `<div class="en">${esc(s.en)}</div>` : ""}</div>
+        <button class="q${dejaQ ? " fait" : ""}" data-q="${i}" title="Pourquoi il dit ça ?" aria-label="Pourquoi il dit ça ?">?</button>
+      </div>`;
+    }
+  });
+  $("piste").innerHTML = html;
+  $("piste").querySelectorAll(".ligne").forEach(el=> el.onclick = () => allerA(+el.dataset.i));
+  $("piste").querySelectorAll(".q").forEach(b=> b.onclick = ev => { ev.stopPropagation(); demandePourquoi(+b.dataset.q); });
+  $("piste").querySelectorAll(".debmoment").forEach(el=> el.onclick = () => allerMoment(+el.dataset.m));
+  if(ICI_SEG >= 0) surligne(ICI_SEG, false);
+}
+
+function carteMoment(m, i, pourArret){
+  if(!m){ return `<p class="note">Lance la vidéo : l'explication de chaque passage apparaît ici.</p>`; }
+  if(!m.fait) return `<p class="quand">${m.debut!=null ? hms(m.debut)+" – "+hms(m.fin) : "Passage "+(i+1)}</p><h3>Pas encore traité</h3><p class="note">${m.echec ? esc(m.echec)+" — " : ""}« Plus », puis « Reprendre le traitement ».</p>`;
+  if(!m.titre) return `<p class="quand">${m.debut!=null ? hms(m.debut)+" – "+hms(m.fin) : ""}</p><h3>Rien à retenir ici</h3><p class="note">${esc(m.se_passe||"")}</p>`;
+  const b = (k,v,cls) => v ? `<div class="bloc ${cls||""}" data-b="${cls||k}"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>` : "";
+  return `
+    <p class="quand">${m.debut!=null ? hms(m.debut)+" – "+hms(m.fin) : "Passage "+(i+1)}</p>
+    <h3>${esc(m.titre)}</h3>
+    ${b("Ce qui se passe", m.se_passe, "se_passe")}
+    ${b("La mécanique", m.mecanique, "mecanique")}
+    ${b("Pourquoi ça marche", m.pourquoi, "pourquoi")}
+    ${m.a_retenir ? `<div class="retenir" data-b="retenir"><div class="k note">${m.dicible ? "À dire, adapté en français" : "Le principe à garder"}</div><div class="v">« ${esc(m.a_retenir)} »</div></div>` : ""}
+    ${b("Pourquoi à ce moment-là", m.pourquoi_ici, "pourquoi_ici")}
+    ${b("Si tu ne le fais pas", m.sinon, "sinon")}
+    ${b("Le piège", m.piege, "piege")}
+    ${b("Ses mots", m.citation ? "« "+m.citation+" »" : null, "sesmots")}
+    ${pourArret ? "" : `<label class="lbl" for="maNote">Ce que j'en retiens</label>
+    <textarea id="maNote" placeholder="Avec tes mots. C'est ça qui reste.">${esc((VID.notes||{})[i]||"")}</textarea>`}
+  `;
+}
+function majMoment(force){
+  const v = VID; if(!v) return;
+  const i = ICI_MOM >= 0 ? ICI_MOM : (v.moments.findIndex(m=>m.fait && m.titre));
+  const m = v.moments[i];
+  const el = $("moment");
+  if(!force && el.dataset.i === String(i) && el.dataset.f === String(!!(m&&m.fait))) return;
+  el.dataset.i = String(i); el.dataset.f = String(!!(m&&m.fait));
+  el.className = m && m.fait && !m.titre ? "remplissage" : "";
+  el.innerHTML = carteMoment(m, i, false);
+  const n = $("maNote");
+  if(n) n.oninput = () => { VID.notes = VID.notes || {}; VID.notes[i] = n.value; clearTimeout(n._t); n._t = setTimeout(()=>sauveVideo(VID), 600); };
+}
+
+function surligne(i, defile){
+  const p = $("piste");
+  p.querySelectorAll(".ligne.ici").forEach(x=>x.classList.remove("ici"));
+  const el = p.querySelector(`.ligne[data-i="${i}"]`);
+  if(!el) return;
+  el.classList.add("ici");
+  // on ne reprend pas la main si tu viens de faire défiler toi-même
+  if(defile && Date.now() - SCROLL_MAIN > 4000){
+    const cible = el.offsetTop - p.clientHeight * 0.3;
+    p.scrollTop = Math.max(0, cible);
+  }
+}
+$("piste").addEventListener("wheel", ()=> SCROLL_MAIN = Date.now(), {passive:true});
+$("piste").addEventListener("touchmove", ()=> SCROLL_MAIN = Date.now(), {passive:true});
+
+/* ---- le lecteur YouTube ---- */
+function chargeYT(){
+  return new Promise(res=>{
+    if(window.YT && window.YT.Player) return res(true);
+    const fini = ok => { clearTimeout(t); res(ok); };
+    const t = setTimeout(()=>fini(false), 9000);
+    window.onYouTubeIframeAPIReady = () => fini(true);
+    const s = document.createElement("script");
+    s.src = "https://www.youtube.com/iframe_api";
+    s.onerror = () => fini(false);
+    document.head.appendChild(s);
+  });
+}
+function secours(msg){
+  PRET = false; libereMedia();
+  // Pas de cadre gris qui perd tout le monde : on cache simplement la vidéo.
+  // La lecture à voix haute fait le travail.
+  document.querySelector(".cadre").classList.add("cache");
+  return;
+  $("secours").classList.add("on");
+  $("secoursTxt").textContent = msg;
+  const id = VID && VID.videoId;
+  if(id){ $("secoursLien").href = "https://www.youtube.com/watch?v="+id; $("secoursLien").style.display = ""; }
+  else $("secoursLien").style.display = "none";
+}
+async function demarreLecteur(){
+  clearInterval(TIC); PRET = false; libereMedia();
+  $("secours").classList.remove("on");
+  if(PLAYER && PLAYER.destroy){ try{ PLAYER.destroy(); }catch(e){} PLAYER = null; }
+  $("lecteur").outerHTML = '<div id="lecteur"></div>';
+  // Une vidéo déjà déposée pour ce transcript passe avant YouTube.
+  const garde = await mediaGarde(VID.id);
+  if(garde) return chargeMedia(garde, false);
+  if(!VID.videoId) return secours("Pas de lien YouTube pour cette vidéo. Dépose la vidéo téléchargée pour que le texte suive la voix.");
+  if(!navigator.onLine) return secours("Hors connexion.");
+  const ok = await chargeYT();
+  if(!ok) return secours("YouTube ne s'affiche pas quand ce fichier est ouvert depuis ton ordinateur.");
+  const pv = {rel:0, playsinline:1, modestbranding:1, cc_load_policy:0};
+  if(location.origin && location.origin !== "null" && /^https?:/.test(location.origin)) pv.origin = location.origin;
+  PLAYER = new YT.Player("lecteur", {
+    videoId: VID.videoId,
+    playerVars: pv,
+    events: {
+      onReady: () => { PRET = true; document.querySelector(".cadre").classList.remove("cache"); document.body.classList.remove("sans-video"); TIC = setInterval(tic, 250); videoDispo(); },
+      onStateChange: e => {
+        if(e.data === 2 || e.data === 0){ if(!DUB.pauseParNous) coupeDub(); }
+        majBoutonVoix();
+      },
+      onError: () => secours("YouTube refuse de s'afficher quand ce fichier est ouvert depuis ton ordinateur.")
+    }
+  });
+}
+
+function tic(){
+  if(!Lecteur.pret() || !VID) return;
+  const t = Lecteur.temps();
+  const segs = VID.segs;
+  // recherche dichotomique de la ligne en cours
+  let lo = 0, hi = segs.length - 1, i = -1;
+  while(lo <= hi){ const mid = (lo+hi)>>1; if(segs[mid].t <= t + 0.3){ i = mid; lo = mid+1; } else hi = mid-1; }
+  if(i !== ICI_SEG && i >= 0){
+    const saut = ICI_SEG >= 0 && Math.abs(i - ICI_SEG) > 1;
+    ICI_SEG = i; surligne(i, true);
+    majSousTitre(i);
+    if(MODE === "video" && Lecteur.enLecture()) dubLigne(i, saut);
+  }
+
+  const mi = VID.moments.findIndex(m => i >= m.a && i <= m.b);
+  if(mi !== ICI_MOM && mi >= 0){
+    // on vient de sortir d'un passage : le coach t'arrête s'il y avait quelque chose à comprendre
+    const avant = ICI_MOM;
+    if(ARRETS && avant >= 0 && mi === avant + 1 && !VUS.has(avant)){
+      const m = VID.moments[avant];
+      if(m && m.fait && m.titre){ VUS.add(avant); arret(avant); }
+    }
+    if(mi < avant) VUS.delete(mi);           // retour en arrière : il pourra s'arrêter à nouveau
+    ICI_MOM = mi; rendFrise(); majMoment(false);
+  }
+}
+function arret(i){
+  coupeDub();
+  Lecteur.pause();
+  $("arretBoite").innerHTML = carteMoment(VID.moments[i], i, true) +
+    `<div class="rang" style="margin-top:18px">
+       <button class="btn plein" id="btnContinuer">Continuer</button>
+       <button class="btn" id="btnEcouterExpli">Écouter l'explication</button>
+       <button class="btn" id="btnRevoir">Revoir le passage</button>
+       <button class="btn" id="btnSansArret">Ne plus m'arrêter</button>
+     </div>`;
+  $("arret").classList.add("on");
+  $("btnContinuer").focus();
+  $("btnContinuer").onclick = () => { $("arret").classList.remove("on"); Lecteur.lire(); };
+  $("btnRevoir").onclick = () => { $("arret").classList.remove("on"); VUS.delete(i); allerMoment(i); };
+  $("btnEcouterExpli").onclick = () => {
+    const m = VID.moments[i];
+    const t = [m.mecanique, m.pourquoi,
+               m.pourquoi_ici && ("Pourquoi à ce moment-là : " + m.pourquoi_ici),
+               m.sinon && ("Si tu ne le fais pas : " + m.sinon),
+               m.a_retenir && ("À retenir : " + m.a_retenir)].filter(Boolean);
+    lisTextes(t);
+  };
+  $("btnSansArret").onclick = () => { ARRETS = false; $("btnArrets").classList.remove("on"); $("arret").classList.remove("on"); Lecteur.lire(); };
+}
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape" && $("arret").classList.contains("on")) $("btnContinuer").click();
+});
+
+function allerA(i){
+  const s = VID.segs[i]; if(!s) return;
+  ICI_SEG = i; surligne(i, false);
+  const mi = VID.moments.findIndex(m => i >= m.a && i <= m.b);
+  if(mi >= 0){ ICI_MOM = mi; rendFrise(); majMoment(false); }
+  if(s.t == null) return;
+  if(Lecteur.pret() && (MODE === "video" || !Voix.actif)){ coupeDub(); Lecteur.aller(s.t - 0.5); Lecteur.lire(); return; }
+  if(mi >= 0 && passageUtile(mi)) lancePassage(mi, i);
+}
+function allerMoment(mi){
+  const m = VID.moments[mi]; if(!m) return;
+  if(!Lecteur.pret() || Voix.actif){ if(passageUtile(mi)) return lancePassage(mi); }
+  ICI_MOM = mi; rendFrise(); majMoment(false);
+  SCROLL_MAIN = 0; surligne(m.a, true); ICI_SEG = m.a;
+  if(m.debut != null){
+    if(Lecteur.pret()){ Lecteur.aller(m.debut); Lecteur.lire(); }
+  }
+}
+
+/* =====================================================================
+   LA PAGE TE LIT LE COACHING
+   Pour chaque passage : ce qui se passe, puis ce que dit le coach en
+   français, puis pourquoi ça marche. Ligne après ligne, en surlignant
+   ce qui est lu. Les passages sans intérêt sont sautés.
+   ===================================================================== */
+const ICONE_LIRE  = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
+const ICONE_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg>';
+
+const Voix = {actif:false, file:[], pos:0, mi:-1, gen:0, garde:null, voix:null};
+const PARLE = "speechSynthesis" in window;
+
+function choisitVoix(){
+  if(!PARLE) return;
+  const vs = speechSynthesis.getVoices().filter(v => /^fr/i.test(v.lang));
+  // les voix « naturelles » de Windows, Edge et Google sont nettement plus agréables
+  // Sans connexion, seules les voix installées sur l'appareil parlent encore.
+  const horsLigne = !navigator.onLine;
+  const note = v => (horsLigne ? (v.localService ? 20 : -20) : 0)
+    + (/natural|neural|online/i.test(v.name) ? 4 : 0) + (/google/i.test(v.name) ? 2 : 0) + (/fr[-_]FR/i.test(v.lang) ? 1 : 0);
+  vs.sort((a,b) => note(b) - note(a));
+  Voix.voix = vs[0] || null;
+}
+if(PARLE){ choisitVoix(); speechSynthesis.onvoiceschanged = choisitVoix; }
+
+function phrases(t){
+  // une phrase à la fois : Chrome coupe parfois les lectures trop longues
+  return String(t||"").match(/[^.!?…]+[.!?…]*["»)]?\s*/g)?.map(x=>x.trim()).filter(Boolean) || [];
+}
+function passageUtile(i){ const m = VID && VID.moments[i]; return m && m.fait && m.titre; }
+function suivantUtile(i, sens){
+  if(!VID) return -1;
+  for(let k = i + sens; k >= 0 && k < VID.moments.length; k += sens) if(passageUtile(k)) return k;
+  return -1;
+}
+
+function fileDuPassage(mi){
+  const m = VID.moments[mi], f = [];
+  const n = VID.moments.filter((x,k)=>k<=mi && passageUtile(k)).length;
+  f.push({txt:`Passage ${n}. ${m.titre}.`});
+  phrases(m.se_passe).forEach(p => f.push({txt:p, bloc:"se_passe"}));
+  f.push({txt:"Voici ce qu'il dit."});
+  for(let i = m.a; i <= m.b; i++){
+    const s = VID.segs[i];
+    if(s.fr) f.push({txt:s.fr, ligne:i});   // jamais d'anglais avec une voix française
+  }
+  f.push({txt:"Ce qu'il faut comprendre."});
+  phrases(m.mecanique).forEach(p => f.push({txt:p, bloc:"mecanique"}));
+  phrases(m.pourquoi).forEach(p => f.push({txt:p, bloc:"pourquoi"}));
+  if(m.pourquoi_ici) phrases("Pourquoi à ce moment-là : " + m.pourquoi_ici).forEach(p => f.push({txt:p, bloc:"pourquoi_ici"}));
+  if(m.sinon) phrases("Si tu ne le fais pas : " + m.sinon).forEach(p => f.push({txt:p, bloc:"sinon"}));
+  if(m.a_retenir) f.push({txt:"À retenir : " + m.a_retenir, bloc:"retenir"});
+  if(m.piege) phrases("Le piège : " + m.piege).forEach(p => f.push({txt:p, bloc:"piege"}));
+  return f;
+}
+
+function majBoutonVoix(){
+  if(MODE === "video" && VID){
+    const joue = Lecteur.enLecture();
+    $("btnEcoute").innerHTML = joue ? ICONE_PAUSE : ICONE_LIRE;
+    const m = VID.moments[ICI_MOM];
+    $("ecouteQuoi").textContent = joue ? "La vidéo parle en français" : "Appuie pour lancer la vidéo en français";
+    $("ecouteTitre").textContent = m && m.titre ? m.titre : VID.titre;
+    return;
+  }
+  $("btnEcoute").innerHTML = Voix.actif ? ICONE_PAUSE : ICONE_LIRE;
+  $("btnEcoute").setAttribute("aria-label", Voix.actif ? "Pause" : "Écouter");
+  const mi = !VID ? -1 : (Voix.mi >= 0 ? Voix.mi : suivantUtile(-1, 1));
+  const m = VID && mi >= 0 ? VID.moments[mi] : null;
+  const total = VID ? VID.moments.filter((x,k)=>passageUtile(k)).length : 0;
+  const n = VID ? VID.moments.filter((x,k)=>k<=mi && passageUtile(k)).length : 0;
+  $("ecouteQuoi").textContent = !PARLE ? "Ton navigateur ne sait pas lire à voix haute — ouvre la page dans Chrome ou Edge"
+    : (m ? `Passage ${n} sur ${total}` + (Voix.actif ? " — en lecture" : "") : "Aucun passage prêt");
+  $("ecouteTitre").textContent = m ? m.titre : "—";
+}
+
+function allumeBloc(b){
+  document.querySelectorAll("#moment .lu").forEach(x=>x.classList.remove("lu"));
+  if(b){ const el = document.querySelector(`#moment [data-b="${b}"]`); if(el) el.classList.add("lu"); }
+}
+
+function lancePassage(mi, depuisLigne){
+  if(!PARLE || mi < 0 || !passageUtile(mi)) return;
+  if(MODE === "video") changeMode("lecon");
+  Lecteur.pause();                          // pas deux voix en même temps
+  Voix.gen++; clearTimeout(Voix.garde);
+  try{ speechSynthesis.cancel(); }catch(e){}
+  Voix.mi = mi; Voix.file = fileDuPassage(mi); Voix.actif = true;
+  Voix.pos = 0;
+  if(depuisLigne != null){
+    const k = Voix.file.findIndex(x => x.ligne != null && x.ligne >= depuisLigne);
+    if(k >= 0) Voix.pos = k;
+  }
+  ICI_MOM = mi; rendFrise(); majMoment(true);
+  SCROLL_MAIN = 0;
+  majBoutonVoix();
+  parle();
+}
+
+function parle(){
+  if(!Voix.actif) return;
+  if(Voix.pos >= Voix.file.length){
+    // fin du passage : une respiration, puis le suivant
+    VUS.add(Voix.mi);
+    const s = suivantUtile(Voix.mi, 1);
+    allumeBloc(null);
+    if(s < 0){ arreteVoix(); $("ecouteQuoi").textContent = "Fin de la vidéo. Bravo."; return; }
+    const g = ++Voix.gen;
+    Voix.garde = setTimeout(()=>{ if(Voix.actif && g === Voix.gen) lancePassage(s); }, 1400);
+    return;
+  }
+  const it = Voix.file[Voix.pos];
+  if(it.ligne != null){ ICI_SEG = it.ligne; surligne(it.ligne, true); allumeBloc(null); }
+  else allumeBloc(it.bloc || null);
+
+  const g = ++Voix.gen;
+  const u = new SpeechSynthesisUtterance(it.txt);
+  u.lang = "fr-FR"; if(Voix.voix) u.voice = Voix.voix;
+  u.rate = parseFloat($("vitesse").value) || 1;
+  const suite = () => {
+    if(g !== Voix.gen || !Voix.actif) return;   // une ancienne lecture qui se termine : on l'ignore
+    clearTimeout(Voix.garde);
+    Voix.pos++; parle();
+  };
+  u.onend = suite;
+  u.onerror = e => { if(e.error !== "interrupted" && e.error !== "canceled") suite(); };
+  speechSynthesis.speak(u);
+  // filet de sécurité : si le navigateur oublie de dire qu'il a fini
+  const mots = it.txt.split(/\s+/).length;
+  clearTimeout(Voix.garde);
+  Voix.garde = setTimeout(()=>{ if(g === Voix.gen && Voix.actif){ try{ speechSynthesis.cancel(); }catch(e){} suite(); } },
+                          (mots / 1.6 / u.rate + 5) * 1000);
+}
+
+function arreteVoix(){
+  Voix.actif = false; Voix.gen++; clearTimeout(Voix.garde);
+  if(PARLE){ try{ speechSynthesis.cancel(); }catch(e){} }
+  majBoutonVoix();
+}
+
+$("btnEcoute").onclick = () => {
+  if(MODE === "video"){
+    if(Lecteur.enLecture()){ coupeDub(); Lecteur.pause(); }
+    else { Lecteur.volume($("optVoixFr").checked ? 22 : 100); Lecteur.lire(); }
+    setTimeout(majBoutonVoix, 250); return;
+  }
+  if(!PARLE) return toast("Ouvre la page dans Chrome ou Edge pour l'écoute");
+  if(Voix.actif){ arreteVoix(); return; }
+  // on reprend exactement où on s'était arrêté
+  if(Voix.mi >= 0 && Voix.file.length && Voix.pos < Voix.file.length){
+    Lecteur.pause();
+    Voix.actif = true; majBoutonVoix(); parle(); return;
+  }
+  const depart = ICI_MOM >= 0 && passageUtile(ICI_MOM) ? ICI_MOM : suivantUtile(-1, 1);
+  lancePassage(depart);
+};
+$("btnSuiv").onclick = () => { const k = suivantUtile(Voix.mi >= 0 ? Voix.mi : ICI_MOM, 1); if(k >= 0) lancePassage(k); };
+$("btnPrec").onclick = () => { const k = suivantUtile(Voix.mi >= 0 ? Voix.mi : ICI_MOM, -1); if(k >= 0) lancePassage(k); };
+$("vitesse").onchange = () => { if(Voix.actif){ Voix.gen++; try{ speechSynthesis.cancel(); }catch(e){} parle(); } };
+
+/* =====================================================================
+   LA VIDÉO DOUBLÉE EN DIRECT
+   Chaque phrase est dite en français au moment où elle commence dans la
+   vidéo. Le son d'origine est baissé, pas coupé : on entend encore le ton.
+   Le français est souvent plus long que l'anglais : la voix accélère un
+   peu, et si ça ne suffit pas, la vidéo attend la fin de la phrase.
+   Quand quelqu'un d'autre prend la parole, la voix change.
+   ===================================================================== */
+let MODE = "lecon";
+const DUB = {parle:false, dernier:-1, enAttente:null, pauseParNous:false, gen:0, garde:null};
+let LOCUTEUR = [];
+
+function calculeLocuteurs(){
+  LOCUTEUR = []; let k = 0;
+  (VID ? VID.segs : []).forEach((sg, i) => { if(sg.voix && i > 0) k++; LOCUTEUR[i] = k % 2; });
+}
+function voixPour(n){
+  const vs = PARLE ? speechSynthesis.getVoices().filter(v => /^fr/i.test(v.lang)) : [];
+  const horsLigne = !navigator.onLine;
+  const note = v => (horsLigne ? (v.localService ? 20 : -20) : 0)
+    + (/natural|neural|online/i.test(v.name) ? 4 : 0) + (/google/i.test(v.name) ? 2 : 0) + (/fr[-_]FR/i.test(v.lang) ? 1 : 0);
+  vs.sort((a,b) => note(b) - note(a));
+  // deux personnes : deux voix si possible, sinon la même voix avec un timbre différent
+  return {voix: vs[n % Math.max(1, Math.min(2, vs.length))] || null, hauteur: vs.length > 1 ? 1 : (n ? 0.82 : 1.08)};
+}
+
+function majSousTitre(i){
+  const el = $("soustitre"); if(!el) return;
+  const sg = VID && VID.segs[i];
+  if(!sg){ el.innerHTML = ""; return; }
+  el.innerHTML = (sg.fr ? `<span class="stfr">${esc(sg.fr)}</span>` : "") +
+                 `<small><span>${esc(sg.en)}</span></small>`;
+}
+
+function coupeDub(){
+  DUB.gen++; clearTimeout(DUB.garde);
+  DUB.parle = false; DUB.enAttente = null;
+  if(PARLE && MODE === "video"){ try{ speechSynthesis.cancel(); }catch(e){} }
+  if(DUB.pauseParNous){ DUB.pauseParNous = false; }
+}
+
+function dubLigne(i, saut){
+  if(!$("optVoixFr").checked || !PARLE) return;
+  const sg = VID.segs[i]; if(!sg || !sg.fr) return;
+  if(saut){ coupeDub(); }
+  if(DUB.parle){
+    if($("optAttendre").checked){
+      // la traduction est en retard : la vidéo attend, on ne perd rien
+      DUB.enAttente = i;
+      DUB.pauseParNous = true; Lecteur.pause();
+      return;
+    }
+    DUB.gen++; try{ speechSynthesis.cancel(); }catch(e){}
+  }
+  parleLigne(i);
+}
+
+function parleLigne(i){
+  const sg = VID.segs[i];
+  const g = ++DUB.gen;
+  DUB.parle = true; DUB.dernier = i;
+  const suivant = VID.segs[i+1];
+  const dispo = Math.max(0.8, (suivant && suivant.t != null ? suivant.t : sg.t + 6) - Lecteur.temps());
+  const mots = sg.fr.split(/\s+/).length;
+  const debit = Math.min(1.45, Math.max(1, (mots / 2.7) / dispo));   // accélère juste ce qu'il faut
+  const {voix, hauteur} = voixPour(LOCUTEUR[i] || 0);
+  const u = new SpeechSynthesisUtterance(sg.fr);
+  u.lang = "fr-FR"; if(voix) u.voice = voix; u.pitch = hauteur;
+  u.rate = debit * (parseFloat($("vitesse").value) || 1);
+  const fin = () => {
+    if(g !== DUB.gen) return;
+    clearTimeout(DUB.garde);
+    DUB.parle = false;
+    if(DUB.enAttente != null){
+      const k = DUB.enAttente; DUB.enAttente = null;
+      parleLigne(k);
+      if(DUB.pauseParNous){ DUB.pauseParNous = false; Lecteur.lire(); }
+    }
+  };
+  u.onend = fin;
+  u.onerror = e => { if(e.error !== "interrupted" && e.error !== "canceled") fin(); };
+  speechSynthesis.speak(u);
+  clearTimeout(DUB.garde);
+  DUB.garde = setTimeout(() => { if(g === DUB.gen){ try{ speechSynthesis.cancel(); }catch(e){} fin(); } }, (mots / 1.6 / u.rate + 5) * 1000);
+}
+
+/* Lire une suite de textes, sans rien d'autre (explication d'un arrêt, réponse à une question) */
+function lisTextes(textes){
+  if(!PARLE) return toast("Ouvre la page dans Chrome ou Edge pour l'écoute");
+  coupeDub(); if(Voix.actif) arreteVoix();
+  try{ speechSynthesis.cancel(); }catch(e){}
+  textes.flatMap(t => phrases(t)).forEach(p => {
+    const u = new SpeechSynthesisUtterance(p);
+    u.lang = "fr-FR"; if(Voix.voix) u.voice = Voix.voix;
+    u.rate = parseFloat($("vitesse").value) || 1;
+    speechSynthesis.speak(u);
+  });
+}
+
+function videoDispo(){
+  const ok = Lecteur.pret();
+  $("modeVideo").disabled = !ok;
+  if(ok && MODE !== "video") changeMode("video");
+  majAide();
+}
+function changeMode(m){
+  if(m === "video" && !Lecteur.pret()) return;
+  if(m !== MODE){ if(MODE === "lecon") arreteVoix(); else { coupeDub(); Lecteur.pause(); } }
+  MODE = m;
+  document.querySelectorAll("#modes button").forEach(b => b.classList.toggle("on", b.dataset.mode === m));
+  $("optVideo").style.display = m === "video" ? "flex" : "none";
+  $("btnPrec").style.display = $("btnSuiv").style.display = m === "lecon" ? "" : "none";
+  Lecteur.volume(m === "video" && $("optVoixFr").checked ? 22 : 100);
+  majAide(); majBoutonVoix();
+}
+function majAide(){
+  const enLigne = /^https?:/.test(location.protocol);
+  let t;
+  if(MODE === "video") t = "La vidéo tourne avec la voix française par-dessus. Le son d'origine est baissé, pas coupé. Clique sur le « ? » d'une ligne pour savoir pourquoi il dit ça.";
+  else if(Lecteur.pret()) t = "Je te lis ce que dit le coach, en français, puis je t'explique pourquoi ça marche. Tu n'as rien à lire.";
+  else t = "Je te lis ce que dit le coach, en français, puis je t'explique pourquoi ça marche. Tu n'as rien à lire."
+         + (!navigator.onLine ? "<br>Tu es hors connexion : la leçon, la traduction et tes notes marchent. La vidéo YouTube reviendra avec le réseau."
+            : (VID && VID.videoId && !enLigne ? "<br>La vidéo YouTube, elle, ne s'affiche que quand cette page est en ligne." : ""));
+  $("ecouteAide").innerHTML = t + `<br><button class="lien" id="btnMedia">Utiliser une vidéo téléchargée</button>`;
+  $("btnMedia").onclick = () => $("fichierMedia").click();
+}
+document.querySelectorAll("#modes button").forEach(b => b.onclick = () => changeMode(b.dataset.mode));
+$("optVoixFr").onchange = () => { if(!$("optVoixFr").checked) coupeDub(); Lecteur.volume($("optVoixFr").checked ? 22 : 100); };
+$("optSt").onchange = () => document.body.classList.toggle("sans-st", !$("optSt").checked);
+
+/* =====================================================================
+   « POURQUOI IL DIT ÇA ? » — sur n'importe quelle ligne
+   La réponse est gardée : une question posée une fois ne coûte plus rien.
+   ===================================================================== */
+async function demandePourquoi(i){
+  const sg = VID.segs[i];
+  const mi = VID.moments.findIndex(m => i >= m.a && i <= m.b);
+  const m = VID.moments[mi] || {};
+  VID.questions = VID.questions || {};
+  const box = $("question");
+  box.style.display = "block";
+  const entete = `<div class="titrebloc">Pourquoi il dit ça ?</div>
+    <div class="cite">${esc(sg.fr || sg.en)}${sg.fr ? `<em>${esc(sg.en)}</em>` : ""}</div>`;
+  const pied = `<div class="rang" style="margin-top:12px">
+      <button class="btn" id="qEcouter">Écouter</button>
+      <button class="btn" id="qNoter">En faire une note</button>
+      <button class="btn" id="qFermer">Fermer</button></div>`;
+  const montreReponse = r => {
+    box.innerHTML = entete +
+      [["Ce qu'il veut dire", r.sens], ["Pourquoi il le dit à ce moment-là", r.pourquoi_ici], ["Ce que ça provoque", r.effet], ["Ce que tu peux en faire", r.pour_toi]]
+      .filter(x => x[1]).map(x => `<div class="bloc"><div class="k">${x[0]}</div><div class="v">${esc(x[1])}</div></div>`).join("") + pied;
+    $("qEcouter").onclick = () => lisTextes([r.sens, r.pourquoi_ici, r.effet, r.pour_toi].filter(Boolean));
+    $("qNoter").onclick = () => ajouteNote(i, [r.sens, r.pour_toi].filter(Boolean).join(" "));
+    $("qFermer").onclick = () => box.style.display = "none";
+    const qb = $("piste").querySelector(`.q[data-q="${i}"]`); if(qb) qb.classList.add("fait");
+  };
+  box.scrollIntoView({behavior:"smooth", block:"nearest"});
+  if(VID.questions[i]) return montreReponse(VID.questions[i]);
+
+  box.innerHTML = entete + `<p class="note">Je regarde le contexte…</p>`;
+  const lignes = [];
+  for(let k = Math.max(m.a ?? i-8, i-10); k <= Math.min(m.b ?? i+4, i+6); k++){
+    const x = VID.segs[k]; if(!x) continue;
+    lignes.push(`${k === i ? ">>> " : ""}[${hms(x.t)}] ${x.en}${x.fr ? "  —  " + x.fr : ""}`);
+  }
+  try{
+    const txt = await demande(
+`Tu aides un closer francophone qui veut COMPRENDRE la méthode d'un coach de vente anglophone (${VID.coach}), pas l'appliquer à l'aveugle.
+
+Vidéo : « ${VID.titre} ». Passage : ${m.titre || "—"}. ${m.se_passe || ""}
+${m.mecanique ? "Mécanique du passage : " + m.mecanique : ""}
+
+Le contexte, la ligne visée est marquée par >>> :
+${lignes.join("\n")}
+
+Explique CETTE ligne-là. Phrases courtes, français parlé, tutoiement, zéro jargon, des images du quotidien si ça aide. S'il s'agit d'un prospect ou d'un élève et pas du coach, dis-le et explique ce que ça révèle.
+
+Réponds UNIQUEMENT avec ce JSON :
+{"sens":"ce qu'il veut vraiment dire, en une ou deux phrases",
+ "pourquoi_ici":"pourquoi il le dit à ce moment précis de l'échange, et pas avant ou après",
+ "effet":"ce que ça provoque chez la personne en face",
+ "pour_toi":"comment un closer peut s'en servir dans ses propres calls, en une phrase"}`, 700);
+    VID.questions[i] = litJson(txt);
+    await sauveVideo(VID);
+    montreReponse(VID.questions[i]);
+  }catch(e){
+    box.innerHTML = entete + `<p class="err">${esc(e.message === "TROP" ? "Trop de demandes, réessaie dans un instant." : e.message)}</p>` + pied;
+    $("qFermer").onclick = () => box.style.display = "none";
+    $("qEcouter").style.display = $("qNoter").style.display = "none";
+  }
+}
+
+/* =====================================================================
+   TES NOTES, ACCROCHÉES À LA SECONDE
+   ===================================================================== */
+function ajouteNote(i, texte){
+  if(!VID) return;
+  VID.notesT = VID.notesT || [];
+  const idx = i != null ? i : (ICI_SEG >= 0 ? ICI_SEG : (VID.moments[ICI_MOM] ? VID.moments[ICI_MOM].a : 0));
+  const n = {id: "n" + Date.now(), i: idx, t: VID.segs[idx] ? VID.segs[idx].t : null, texte: texte || ""};
+  VID.notesT.push(n);
+  sauveVideo(VID); rendNotes(n.id);
+}
+function rendNotes(focus){
+  const l = (VID.notesT || []).slice().sort((a,b) => (a.t ?? 0) - (b.t ?? 0));
+  const box = $("mesNotes");
+  if(!l.length){ box.style.display = "none"; return; }
+  box.style.display = "block";
+  box.innerHTML = `<div class="titrebloc" style="margin-bottom:6px">Mes notes <span class="note">— ${l.length}</span></div>` +
+    l.map(n => {
+      const sg = VID.segs[n.i];
+      return `<div class="note-t" data-n="${n.id}">
+        <span class="h" data-aller="${n.i}">${n.t != null ? hms(n.t) : "—"}</span>
+        <div class="ligneCitee">${esc(sg ? (sg.fr || sg.en) : "")}</div>
+        <button class="x" data-suppr="${n.id}" aria-label="Supprimer la note">×</button>
+        <textarea data-txt="${n.id}" placeholder="Ce que tu comprends, ce que tu veux essayer, une question…">${esc(n.texte)}</textarea>
+      </div>`;
+    }).join("");
+  box.querySelectorAll("[data-aller]").forEach(el => el.onclick = () => allerA(+el.dataset.aller));
+  box.querySelectorAll("[data-suppr]").forEach(el => el.onclick = () => {
+    if(!confirm("Supprimer cette note ?")) return;
+    VID.notesT = VID.notesT.filter(x => x.id !== el.dataset.suppr); sauveVideo(VID); rendNotes();
+  });
+  box.querySelectorAll("[data-txt]").forEach(el => el.oninput = () => {
+    const n = VID.notesT.find(x => x.id === el.dataset.txt); if(n) n.texte = el.value;
+    clearTimeout(el._t); el._t = setTimeout(() => sauveVideo(VID), 600);
+  });
+  if(focus){ const t = box.querySelector(`[data-txt="${focus}"]`); if(t){ t.focus(); t.scrollIntoView({behavior:"smooth", block:"center"}); } }
+}
+$("btnNoter").onclick = () => {
+  // la vidéo se met en pause le temps d'écrire
+  if(MODE === "video" && Lecteur.enLecture()){ coupeDub(); Lecteur.pause(); }
+  if(MODE === "lecon" && Voix.actif) arreteVoix();
+  ajouteNote(null, "");
+};
+
+/* =====================================================================
+   TÉLÉCHARGER
+   ===================================================================== */
+function telecharge(nom, contenu, type){
+  const url = URL.createObjectURL(new Blob([contenu], {type}));
+  const a = document.createElement("a");
+  a.href = url; a.download = nom; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+function nomFichier(base){ return base + " — " + (VID.titre || "video").replace(/[\\/:*?"<>|]+/g, "").slice(0, 70); }
+
+$("btnTxt").onclick = () => {
+  const t = [VID.titre, (VID.coach || ""), VID.url || "", ""].concat(
+    VID.segs.map(sg => (sg.t != null ? "[" + hms(sg.t) + "] " : "") + (sg.fr || sg.en))).join("\r\n");
+  telecharge(nomFichier("Traduction") + ".txt", "\ufeff" + t, "text/plain;charset=utf-8");
+  toast("Traduction téléchargée");
+};
+
+function dossierHtml(){
+  const nom = ({"josh lyons":"Josh Lyons","bill walsh":"Bill Walsh","ben byrne":"Ben Byrne","sami":"Sami"}[VID.coach] || VID.coach);
+  const notesParLigne = {};
+  (VID.notesT || []).forEach(n => (notesParLigne[n.i] = notesParLigne[n.i] || []).push(n));
+  const Q = VID.questions || {};
+  const champ = (k, v) => v ? `<p><b>${k}</b><br>${esc(v)}</p>` : "";
+  const utiles = VID.moments.map((m,i) => ({m,i})).filter(x => x.m.fait && x.m.titre);
+  let h = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${esc(VID.titre)}</title>
+<style>
+body{font-family:Georgia,'Times New Roman',serif;max-width:760px;margin:40px auto;padding:0 24px;color:#1b1f23;line-height:1.6}
+h1{font-family:Arial,sans-serif;font-size:28px;margin-bottom:4px} h2{font-family:Arial,sans-serif;font-size:21px;margin:44px 0 6px;border-top:2px solid #E8A33D;padding-top:16px}
+.meta{color:#6a737d;font-family:Arial,sans-serif;font-size:14px} .quand{color:#8a6d2b;font-family:Arial,sans-serif;font-size:13px}
+.retenir{background:#fbf3e4;padding:10px 14px;border-radius:6px} .ligne{margin:6px 0} .t{color:#9aa3ab;font-family:Arial,sans-serif;font-size:12px;margin-right:6px}
+.en{color:#6a737d;font-style:italic;font-size:14px;display:block;margin-left:44px} .mesnotes{border-left:3px solid #E8A33D;padding:4px 12px;margin:8px 0 8px 44px;background:#fffaf0}
+.q{border-left:3px solid #5E9BC4;padding:4px 12px;margin:8px 0 8px 44px;background:#f3f8fb;font-size:14px}
+ol{padding-left:20px} @media print{h2{page-break-before:auto}}
+</style></head><body>
+<h1>${esc(VID.titre)}</h1>
+<p class="meta">${esc(nom)}${VID.url ? " — " + esc(VID.url) : ""}<br>Dossier du ${new Date().toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})}</p>
+<h2 style="border:0;margin-top:26px">Les mécaniques de cette vidéo</h2>
+<ol>${utiles.map(x => `<li>${esc(x.m.titre)}${x.m.debut != null ? ` <span class="t">${hms(x.m.debut)}</span>` : ""}</li>`).join("")}</ol>`;
+  VID.moments.forEach((m, mi) => {
+    if(!m.fait) return;
+    h += m.titre ? `<h2>${esc(m.titre)}</h2>` : `<h2 style="color:#9aa3ab;font-size:16px">Passage sans enjeu</h2>`;
+    if(m.debut != null) h += `<p class="quand">${hms(m.debut)} – ${hms(m.fin)}</p>`;
+    if(m.titre){
+      h += champ("Ce qui se passe", m.se_passe) + champ("La mécanique", m.mecanique) + champ("Pourquoi ça marche", m.pourquoi)
+         + champ("Pourquoi à ce moment-là", m.pourquoi_ici) + champ("Si tu ne le fais pas", m.sinon);
+      if(m.a_retenir) h += `<p class="retenir"><b>${m.dicible ? "À dire" : "À retenir"}</b><br>« ${esc(m.a_retenir)} »</p>`;
+      h += champ("Le piège", m.piege) + (m.citation ? `<p><b>Ses mots</b><br><i>« ${esc(m.citation)} »</i></p>` : "");
+      if(VID.notes && VID.notes[mi]) h += `<div class="mesnotes"><b>Ce que j'en retiens</b><br>${esc(VID.notes[mi]).replace(/\n/g,"<br>")}</div>`;
+      h += `<p><b>Ce qu'ils disent</b></p>`;
+    } else if(m.se_passe) h += `<p class="meta">${esc(m.se_passe)}</p>`;
+    for(let i = m.a; i <= m.b; i++){
+      const sg = VID.segs[i];
+      h += `<div class="ligne"><span class="t">${sg.t != null ? hms(sg.t) : ""}</span>${esc(sg.fr || sg.en)}${sg.fr ? `<span class="en">${esc(sg.en)}</span>` : ""}</div>`;
+      if(Q[i]) h += `<div class="q"><b>Pourquoi il dit ça</b><br>${esc([Q[i].sens, Q[i].pourquoi_ici, Q[i].effet, Q[i].pour_toi].filter(Boolean).join(" "))}</div>`;
+      (notesParLigne[i] || []).forEach(n => { if(n.texte) h += `<div class="mesnotes"><b>Ma note</b><br>${esc(n.texte).replace(/\n/g,"<br>")}</div>`; });
+    }
+  });
+  return h + "</body></html>";
+}
+$("btnDossier").onclick = $("btnDossier2").onclick = () => {
+  telecharge(nomFichier("Dossier") + ".html", dossierHtml(), "text/html;charset=utf-8");
+  toast("Dossier téléchargé — il est dans ton dossier Téléchargements");
+};
+
+/* =====================================================================
+   PASSER UNE VIDÉO D'UN APPAREIL À L'AUTRE, sans repayer la traduction
+   ===================================================================== */
+$("btnExportVideo").onclick = () => {
+  telecharge(nomFichier("Vidéo traduite") + ".json", JSON.stringify(VID), "application/json");
+  toast("Fichier prêt : importe-le sur l'autre appareil");
+};
+$("btnImportVideo").onclick = () => $("fichierImport").click();
+$("fichierImport").onchange = async () => {
+  const f = $("fichierImport").files[0]; $("fichierImport").value = "";
+  if(!f) return;
+  try{
+    const v = JSON.parse(await f.text());
+    if(!v || !Array.isArray(v.segs) || !Array.isArray(v.moments)) throw new Error();
+    v.id = v.id || ("v" + Date.now());
+    await sauveVideo(v); await rendBiblio();
+    toast("« " + (v.titre || "Vidéo") + " » importée");
+  }catch(e){ toast("Ce fichier n'est pas une vidéo traduite"); }
+};
+
+/* ---- déposer la vidéo ---- */
+$("btnMedia2").onclick = () => { $("menu").style.display = "none"; $("fichierMedia").click(); };
+$("fichierMedia").onchange = () => {
+  const f = $("fichierMedia").files[0];
+  if(f) chargeMedia(f, true);
+  $("fichierMedia").value = "";
+};
+(function(){
+  const c = document.querySelector(".cadre");
+  c.addEventListener("dragover", e => { e.preventDefault(); c.classList.add("survol"); });
+  c.addEventListener("dragleave", () => c.classList.remove("survol"));
+  c.addEventListener("drop", e => {
+    e.preventDefault(); c.classList.remove("survol");
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f) chargeMedia(f, true);
+  });
+})();
+
+/* ---- commandes de la lecture ---- */
+$("btnLectRetour").onclick = () => {
+  clearInterval(TIC); coupeDub(); Lecteur.pause(); arreteVoix();
+  montre("biblio"); rendBiblio();
+};
+document.querySelectorAll("#langue button").forEach(b=>{
+  b.onclick = () => {
+    document.querySelectorAll("#langue button").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    document.body.classList.toggle("fr-seul", b.dataset.l === "fr");
+    document.body.classList.toggle("en-seul", b.dataset.l === "en");
+  };
+});
+$("btnArrets").onclick = () => { ARRETS = !ARRETS; $("btnArrets").classList.toggle("on", ARRETS); toast(ARRETS ? "Le coach t'arrêtera à chaque passage" : "Lecture sans arrêt"); };
+$("btnMenu").onclick = () => { const m = $("menu"); m.style.display = m.style.display === "none" ? "block" : "none"; };
+$("btnReprendre").onclick = () => {
+  if(!VID) return;
+  if(EN_COURS === VID.id) return toast("Déjà en cours");
+  VID.moments.forEach(m=>{ if(!m.fait) delete m.echec; });
+  toast("Je reprends les passages manquants");
+  traite(VID, false);
+};
+
+/* Les mécaniques comprises deviennent des fiches pour le copilote.
+   Même format que ta base, avec l'école du coach. */
+$("btnExport").onclick = () => {
+  const fiches = VID.moments.filter(m=>m.fait && m.titre && m.a_retenir).map(m=>({
+    objection: m.sujet || "AUTRE",
+    label: m.titre,
+    type: m.dicible ? "TRAITEMENT" : "PREUVE",
+    situation: m.se_passe || "",
+    phrase: m.a_retenir,
+    pourquoi: [m.mecanique, m.pourquoi].filter(Boolean).join(" "),
+    source: VID.titre,
+    ecole: VID.coach,
+    origine: m.citation || undefined,
+    valide: 0
+  }));
+  if(!fiches.length) return toast("Aucun passage n'a encore de formulation à retenir");
+  const url = URL.createObjectURL(new Blob([JSON.stringify(fiches,null,1)],{type:"application/json"}));
+  const a = document.createElement("a");
+  a.href = url; a.download = "fiches-" + VID.coach.replace(/\s+/g,"-") + "-" + VID.titre.toLowerCase().replace(/[^a-z0-9]+/g,"-").slice(0,40) + ".json";
+  a.click(); setTimeout(()=>URL.revokeObjectURL(url), 1500);
+  toast(fiches.length + " fiches exportées");
+};
+
+/* =====================================================================
+   RÉGLAGES
+   ===================================================================== */
+$("btnReglages").onclick = () => montre("reglages");
+$("btnReglagesRetour").onclick = () => { montre("biblio"); rendBiblio(); };
+$("btnCle").onclick = async () => {
+  const k = $("cle").value.trim();
+  if(!k) return toast("Colle la clé d'abord");
+  API_KEY = k; $("cleEtat").textContent = "Test en cours…";
+  try{
+    await demande("Réponds juste : ok", 10);
+    await Store.set("apikey", k);
+    $("cleEtat").innerHTML = '<span class="ok">Clé valide et enregistrée.</span>';
+  }catch(e){ API_KEY = ""; $("cleEtat").innerHTML = '<span class="err">'+esc(e.message === "TROP" ? "Trop de demandes, réessaie dans un instant." : e.message)+'</span>'; }
+};
+
+/* =====================================================================
+   HORS CONNEXION
+   Une fois ouverte en ligne, la page se garde sur l'appareil.
+   Elle s'ouvre ensuite même sans réseau. Les mises à jour arrivent
+   toutes seules la prochaine fois que tu es connecté.
+   ===================================================================== */
+if("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+window.addEventListener("online",  () => { if(VID) majAide(); choisitVoix(); });
+window.addEventListener("offline", () => { if(VID) majAide(); choisitVoix(); });
+
+/* =====================================================================
+   DÉMARRAGE
+   ===================================================================== */
+(async function(){
+  let k = await Store.get("apikey");
+  if(!k) k = await Store.get("cle");
+  if(k){ API_KEY = k; $("cle").value = k; $("cleEtat").innerHTML = '<span class="ok">Clé en place.</span>'; }
+  rendBiblio();
+})();
+</script>
+</body>
+</html>
