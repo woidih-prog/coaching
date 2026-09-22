@@ -106,7 +106,12 @@ body.sans-video #btnArrets{display:none}
 /* le lecteur à voix haute : le cœur de la page */
 #ecoute{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;
   display:grid;grid-template-columns:auto 1fr;gap:4px 20px;align-items:center;
-  grid-template-areas:"modes modes" "btn quoi" "btn titre" "ctrl ctrl" "opt opt" "noter noter" "aide aide"}
+  grid-template-areas:"modes modes" "btn quoi" "btn titre" "ctrl ctrl" "opt opt" "optaudio optaudio" "noter noter" "srv srv" "aide aide"}
+#optAudio{grid-area:optaudio;display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:10px;font-size:13px;color:var(--muted)}
+#optAudio label{display:flex;gap:7px;align-items:center;cursor:pointer}
+#optAudio input{accent-color:var(--amber);width:16px;height:16px}
+#etatServeur{grid-area:srv;margin-top:8px;color:var(--steel)}
+.video .srv{color:var(--steel)}
 #modes{grid-area:modes} #btnEcoute{grid-area:btn} #ecouteQuoi{grid-area:quoi;align-self:end}
 #ecouteTitre{grid-area:titre;align-self:start} #ctrl{grid-area:ctrl} #optVideo{grid-area:opt}
 #rangNoter{grid-area:noter} #ecouteAide{grid-area:aide}
@@ -313,6 +318,20 @@ body.en-seul .ligne.ici .en{color:var(--ink);font-size:20px;line-height:1.4}
       </div>
       <p id="cleEtat" class="note" style="margin-top:10px"></p>
     </div>
+    <h2 style="margin-top:30px">Mon serveur</h2>
+    <div class="panneau">
+      <p class="note" style="margin-bottom:12px">L'adresse et le mot de passe donnés par ton serveur à l'installation. Une fois ici, c'est lui qui traduit et qui fabrique l'audio, même quand ton téléphone est éteint. Tu n'as plus besoin de clé sur cet appareil.</p>
+      <label class="lbl" for="srvUrl" style="margin-top:0">Adresse</label>
+      <input type="text" id="srvUrl" placeholder="https://…ts.net" autocomplete="off">
+      <label class="lbl" for="srvMdp">Mot de passe</label>
+      <input type="password" id="srvMdp" autocomplete="off">
+      <div class="rang" style="margin-top:12px">
+        <button class="btn" id="btnSrv">Enregistrer et tester</button>
+        <button class="btn" id="btnSrvEnvoi">Envoyer mes vidéos de cet appareil au serveur</button>
+        <button class="btn" id="btnSrvOubli">Oublier ce serveur</button>
+      </div>
+      <p id="srvEtat" class="note" style="margin-top:10px"></p>
+    </div>
   </div>
 </section>
 
@@ -368,6 +387,12 @@ body.en-seul .ligne.ici .en{color:var(--ink);font-size:20px;line-height:1.4}
           <label><input type="checkbox" id="optSt" checked> Sous-titres</label>
           <label><input type="checkbox" id="optAttendre" checked> Attendre la fin de chaque traduction</label>
         </div>
+        <div id="optAudio" style="display:none">
+          <label><input type="radio" name="typeAudio" value="lecon" checked> Avec les explications</label>
+          <label><input type="radio" name="typeAudio" value="traduction"> Le coaching seul</label>
+          <button class="lien" id="btnGarderAudio">Garder sur cet appareil, pour écouter sans réseau</button>
+        </div>
+        <p id="etatServeur" class="note"></p>
         <div class="rang" id="rangNoter">
           <button class="btn" id="btnNoter">Noter ce moment</button>
         </div>
@@ -452,7 +477,26 @@ const Store = {
    APPEL AU MODÈLE
    ===================================================================== */
 let API_KEY = "";
+/* =====================================================================
+   UNE SEULE CLÉ POUR TOUTES TES APPS
+   Chaque app rangeait la clé dans son propre tiroir : le copilote, Suivi R1
+   et Comprendre un coaching ne se voyaient pas. D'où la clé redemandée.
+   Maintenant elles partagent un même emplacement. Tu la mets une fois,
+   dans n'importe laquelle, et toutes la retrouvent — à condition d'être
+   ouvertes depuis la même adresse (ton site GitHub), dans le même navigateur.
+   ===================================================================== */
+const CLE_PARTAGEE = "woidih_cle_api";
+function cleCommune(){ try{ return localStorage.getItem(CLE_PARTAGEE) || ""; }catch(e){ return ""; } }
+function gardeCleCommune(k){ try{ if(k) localStorage.setItem(CLE_PARTAGEE, k); }catch(e){} }
+// on demande au navigateur de ne pas faire le ménage dans ce qu'on a gardé
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
+
 async function demande(prompt, maxJetons){
+  // Avec un serveur, c'est lui qui a la clé : l'appareil n'en a plus besoin.
+  if(typeof SRV === "function" && SRV()){
+    const r = await api("/api/claude", {method:"POST", body: JSON.stringify({prompt, max: maxJetons || 1000})});
+    return r.texte;
+  }
   const h = {"Content-Type":"application/json"};
   if(API_KEY){
     h["x-api-key"] = API_KEY;
@@ -702,6 +746,20 @@ $("btnTraiter").onclick = async () => {
     notes: {}
   };
   await sauveVideo(v);
+  if(SRV()){
+    try{
+      await api("/api/videos/" + v.id, {method:"PUT", body: JSON.stringify(v)});
+      await api("/api/videos/" + v.id + "/traiter", {method:"POST"});
+      $("suivi").style.display = "block"; $("suiviErr").textContent = "";
+      $("suiviTxt").textContent = "C'est parti sur ton serveur. Tu peux fermer l'app, éteindre l'écran : il travaille tout seul, et l'audio sera prêt à la fin.";
+      $("suiviBarre").style.width = "8%";
+      setTimeout(() => { montre("biblio"); rendBiblio(); }, 3000);
+      return;
+    }catch(e){
+      $("suivi").style.display = "block";
+      $("suiviErr").textContent = e.message + " — je traduis sur cet appareil à la place.";
+    }
+  }
   traite(v, true);
 };
 
@@ -749,7 +807,7 @@ Réponds UNIQUEMENT avec ce JSON, sans texte autour :
 let EN_COURS = null;
 async function traite(v, afficher){
   if(EN_COURS === v.id) return;
-  EN_COURS = v.id;
+  EN_COURS = v.id; gardeEcran(true);
   const reste = v.moments.map((m,i)=>i).filter(i=>!v.moments[i].fait);
   const total = v.moments.length;
   const suivi = () => {
@@ -793,7 +851,7 @@ async function traite(v, afficher){
     }
   }
   await Promise.all([ouvrier(), ouvrier(), ouvrier()]);
-  EN_COURS = null;
+  EN_COURS = null; gardeEcran(false);
   const faits = v.moments.filter(m=>m.fait).length;
   if(afficher){
     if(erreur) $("suiviErr").textContent = erreur.message;
@@ -817,15 +875,16 @@ async function sauveVideo(v){
   const k = ix.findIndex(x=>x.id===v.id);
   if(k >= 0) ix[k] = e; else ix.unshift(e);
   await Store.set("index", ix);
+  if(SRV()) syncNotes(v);
 }
 async function rendBiblio(){
-  const ix = await index();
+  const ix = await listeBiblio();
   $("vide").style.display = ix.length ? "none" : "block";
   const nom = c => ({"josh lyons":"Josh Lyons","bill walsh":"Bill Walsh","ben byrne":"Ben Byrne","sami":"Sami"}[c] || c);
   $("liste").innerHTML = ix.map(e=>`
     <div class="video" data-id="${esc(e.id)}">
       <div class="t">${esc(e.titre)}</div>
-      <div class="m"><span class="coach">${esc(nom(e.coach))}</span>${e.duree!=null ? " — "+hms(e.duree) : ""} — ${e.faits === e.total ? e.total+" passages expliqués" : e.faits+" sur "+e.total+" passages prêts"}</div>
+      <div class="m"><span class="coach">${esc(nom(e.coach))}</span>${e.duree!=null ? " — "+hms(e.duree) : ""} — ${e.faits === e.total ? e.total+" passages expliqués" : e.faits+" sur "+e.total+" passages prêts"}${e.serveur ? `<br><span class="srv">${esc(texteEtat(e))}</span>` : ""}</div>
       <button class="x" data-suppr="${esc(e.id)}" aria-label="Supprimer">×</button>
     </div>`).join("");
   document.querySelectorAll(".video").forEach(el=>{
@@ -839,6 +898,7 @@ async function rendBiblio(){
       ev.stopPropagation();
       if(!confirm("Supprimer cette vidéo et sa traduction ?")) return;
       await Store.del("video:"+b.dataset.suppr);
+      if(SRV()){ try{ await api("/api/videos/"+b.dataset.suppr, {method:"DELETE"}); }catch(e){} }
       await Store.set("index", (await index()).filter(x=>x.id !== b.dataset.suppr));
       rendBiblio();
     };
@@ -947,7 +1007,10 @@ async function mediaGarde(id){
 let ICI_SEG = -1, ICI_MOM = -1, VUS = new Set(), ARRETS = true, SCROLL_MAIN = 0;
 
 async function ouvre(id){
-  const v = await Store.get("video:"+id);
+  let v = null;
+  if(SRV()){ try{ v = await api("/api/videos/" + id); await Store.set("video:"+id, v); }catch(e){} }
+  if(!v) v = await Store.get("video:"+id);
+  if(AUD.el){ AUD.el.pause(); AUD.el.dataset.cle = ""; }
   if(!v) return toast("Vidéo introuvable");
   if(typeof arreteVoix === "function") arreteVoix();
   Voix.mi = -1; Voix.file = []; Voix.pos = 0;
@@ -969,6 +1032,9 @@ async function ouvre(id){
   calculeLocuteurs(); rendNotes(); majAide();
   majBoutonVoix();
   demarreLecteur();
+  majAudioUI(); suivreServeur();
+  if(DBL.el){ DBL.el.pause(); DBL.el.dataset.cle = ""; }
+  prepareDoublage();
   if(faits < v.moments.length && EN_COURS !== v.id) toast("Des passages ne sont pas encore prêts : « Plus », puis « Reprendre »");
 }
 
@@ -1108,6 +1174,7 @@ async function demarreLecteur(){
 
 function tic(){
   if(!Lecteur.pret() || !VID) return;
+  syncDoublage();
   const t = Lecteur.temps();
   const segs = VID.segs;
   // recherche dichotomique de la ligne en cours
@@ -1117,7 +1184,8 @@ function tic(){
     const saut = ICI_SEG >= 0 && Math.abs(i - ICI_SEG) > 1;
     ICI_SEG = i; surligne(i, true);
     majSousTitre(i);
-    if(MODE === "video" && Lecteur.enLecture()) dubLigne(i, saut);
+    // avec le doublage du serveur, c'est lui qui parle : pas la voix du navigateur
+    if(MODE === "video" && Lecteur.enLecture() && !doublageDispo()) dubLigne(i, saut);
   }
 
   const mi = VID.moments.findIndex(m => i >= m.a && i <= m.b);
@@ -1167,10 +1235,18 @@ function allerA(i){
   if(mi >= 0){ ICI_MOM = mi; rendFrise(); majMoment(false); }
   if(s.t == null) return;
   if(Lecteur.pret() && (MODE === "video" || !Voix.actif)){ coupeDub(); Lecteur.aller(s.t - 0.5); Lecteur.lire(); return; }
+  if(MODE === "lecon" && audioDispo()){
+    const p = pistesAudio().find(x => x.i === i);
+    if(p) return lanceAudio(p.t0);
+  }
   if(mi >= 0 && passageUtile(mi)) lancePassage(mi, i);
 }
 function allerMoment(mi){
   const m = VID.moments[mi]; if(!m) return;
+  if(MODE === "lecon" && audioDispo()){
+    const c = chapitres().find(x => x.mi === mi);
+    if(c) return lanceAudio(c.t0);
+  }
   if(!Lecteur.pret() || Voix.actif){ if(passageUtile(mi)) return lancePassage(mi); }
   ICI_MOM = mi; rendFrise(); majMoment(false);
   SCROLL_MAIN = 0; surligne(m.a, true); ICI_SEG = m.a;
@@ -1236,6 +1312,16 @@ function fileDuPassage(mi){
 }
 
 function majBoutonVoix(){
+  if(MODE === "lecon" && VID && audioDispo()){
+    const joue = audioActif();
+    $("btnEcoute").innerHTML = joue ? ICONE_PAUSE : ICONE_LIRE;
+    const m = VID.moments[ICI_MOM];
+    const total = VID.moments.filter((x,k)=>passageUtile(k)).length;
+    const n = ICI_MOM >= 0 ? VID.moments.filter((x,k)=>k<=ICI_MOM && passageUtile(k)).length : 0;
+    $("ecouteQuoi").textContent = (n ? `Passage ${n} sur ${total}` : `${total} passages`) + (joue ? " — continue même écran éteint" : " — marche écran éteint");
+    $("ecouteTitre").textContent = m && m.titre ? m.titre : VID.titre;
+    return;
+  }
   if(MODE === "video" && VID){
     const joue = Lecteur.enLecture();
     $("btnEcoute").innerHTML = joue ? ICONE_PAUSE : ICONE_LIRE;
@@ -1322,9 +1408,16 @@ function arreteVoix(){
 $("btnEcoute").onclick = () => {
   if(MODE === "video"){
     if(Lecteur.enLecture()){ coupeDub(); Lecteur.pause(); }
-    else { Lecteur.volume($("optVoixFr").checked ? 22 : 100); Lecteur.lire(); }
+    else {
+      Lecteur.volume($("optVoixFr").checked ? 22 : 100);
+      // Sur iPhone, un son ne peut démarrer qu'au moment où l'on touche l'écran :
+      // on lance le doublage ici, dans le même geste que la vidéo.
+      if(doublageDispo() && DBL.el && DBL.el.src && $("optVoixFr").checked){ DBL.el.currentTime = Lecteur.temps(); DBL.el.play().catch(()=>{}); }
+      Lecteur.lire();
+    }
     setTimeout(majBoutonVoix, 250); return;
   }
+  if(audioDispo()){ audioActif() ? AUD.el.pause() : lanceAudio(); return; }
   if(!PARLE) return toast("Ouvre la page dans Chrome ou Edge pour l'écoute");
   if(Voix.actif){ arreteVoix(); return; }
   // on reprend exactement où on s'était arrêté
@@ -1335,8 +1428,8 @@ $("btnEcoute").onclick = () => {
   const depart = ICI_MOM >= 0 && passageUtile(ICI_MOM) ? ICI_MOM : suivantUtile(-1, 1);
   lancePassage(depart);
 };
-$("btnSuiv").onclick = () => { const k = suivantUtile(Voix.mi >= 0 ? Voix.mi : ICI_MOM, 1); if(k >= 0) lancePassage(k); };
-$("btnPrec").onclick = () => { const k = suivantUtile(Voix.mi >= 0 ? Voix.mi : ICI_MOM, -1); if(k >= 0) lancePassage(k); };
+$("btnSuiv").onclick = () => { if(MODE === "lecon" && audioDispo()) return sauteChapitre(1); const k = suivantUtile(Voix.mi >= 0 ? Voix.mi : ICI_MOM, 1); if(k >= 0) lancePassage(k); };
+$("btnPrec").onclick = () => { if(MODE === "lecon" && audioDispo()) return sauteChapitre(-1); const k = suivantUtile(Voix.mi >= 0 ? Voix.mi : ICI_MOM, -1); if(k >= 0) lancePassage(k); };
 $("vitesse").onchange = () => { if(Voix.actif){ Voix.gen++; try{ speechSynthesis.cancel(); }catch(e){} parle(); } };
 
 /* =====================================================================
@@ -1445,6 +1538,8 @@ function videoDispo(){
   majAide();
 }
 function changeMode(m){
+  if(m !== MODE && AUD.el) AUD.el.pause();
+  if(m !== MODE && DBL.el) DBL.el.pause();
   if(m === "video" && !Lecteur.pret()) return;
   if(m !== MODE){ if(MODE === "lecon") arreteVoix(); else { coupeDub(); Lecteur.pause(); } }
   MODE = m;
@@ -1457,7 +1552,8 @@ function changeMode(m){
 function majAide(){
   const enLigne = /^https?:/.test(location.protocol);
   let t;
-  if(MODE === "video") t = "La vidéo tourne avec la voix française par-dessus. Le son d'origine est baissé, pas coupé. Clique sur le « ? » d'une ligne pour savoir pourquoi il dit ça.";
+  if(MODE === "video" && doublageDispo()) t = "Doublage en voix naturelle, calé sur la vidéo : une voix pour le coach, une autre pour la personne en face. Lance avec le rond orange.";
+  else if(MODE === "video") t = "La vidéo tourne avec la voix française par-dessus. Le son d'origine est baissé, pas coupé. Clique sur le « ? » d'une ligne pour savoir pourquoi il dit ça.";
   else if(Lecteur.pret()) t = "Je te lis ce que dit le coach, en français, puis je t'explique pourquoi ça marche. Tu n'as rien à lire.";
   else t = "Je te lis ce que dit le coach, en français, puis je t'explique pourquoi ça marche. Tu n'as rien à lire."
          + (!navigator.onLine ? "<br>Tu es hors connexion : la leçon, la traduction et tes notes marchent. La vidéo YouTube reviendra avec le réseau."
@@ -1655,9 +1751,279 @@ $("fichierImport").onchange = async () => {
     const v = JSON.parse(await f.text());
     if(!v || !Array.isArray(v.segs) || !Array.isArray(v.moments)) throw new Error();
     v.id = v.id || ("v" + Date.now());
-    await sauveVideo(v); await rendBiblio();
+    await sauveVideo(v);
+    if(SRV()){
+      try{
+        await api("/api/videos/" + v.id, {method:"PUT", body: JSON.stringify(v)});
+        await api("/api/videos/" + v.id + "/traiter", {method:"POST"});
+      }catch(e){ toast(e.message); }
+    }
+    await rendBiblio();
     toast("« " + (v.titre || "Vidéo") + " » importée");
   }catch(e){ toast("Ce fichier n'est pas une vidéo traduite"); }
+};
+
+/* =====================================================================
+   MON SERVEUR
+   Il traduit et fabrique l'audio à la place de l'appareil. Tant qu'il n'est
+   pas réglé, l'app fonctionne exactement comme avant.
+   ===================================================================== */
+const CLE_SERVEUR = "woidih_serveur";
+function SRV(){
+  try{ const x = JSON.parse(localStorage.getItem(CLE_SERVEUR) || "null"); return x && x.url && x.mdp ? x : null; }catch(e){ return null; }
+}
+async function api(chemin, opts){
+  const x = SRV(); if(!x) throw new Error("Pas de serveur réglé.");
+  const o = Object.assign({}, opts || {});
+  o.headers = Object.assign({"x-mot-de-passe": x.mdp}, o.body ? {"Content-Type":"application/json"} : {}, o.headers || {});
+  let r;
+  try{ r = await fetch(x.url.replace(/\/+$/, "") + chemin, o); }
+  catch(e){ throw new Error("Ton serveur ne répond pas."); }
+  if(r.status === 401) throw new Error("Mot de passe du serveur refusé.");
+  if(!r.ok){ let m = ""; try{ m = (await r.json()).erreur || ""; }catch(e){} throw new Error("Serveur : " + (m || "erreur " + r.status)); }
+  return r.json();
+}
+function urlAudio(id, type){
+  const x = SRV();
+  return x.url.replace(/\/+$/, "") + "/api/videos/" + id + "/audio/" + type + ".mp3?k=" + encodeURIComponent(x.mdp);
+}
+function texteEtat(e){
+  const st = e && e.serveur; if(!st) return "";
+  return ({
+    attente: "En file d'attente sur ton serveur.",
+    traduction: "Ton serveur traduit — " + e.faits + " sur " + e.total + " passages.",
+    audio: "Ton serveur fabrique l'audio. Encore quelques minutes.",
+    pret: e.audio ? "Prêt. L'audio marche même écran éteint." : "Prêt.",
+    erreur: "Problème sur le serveur : " + (st.message || "")
+  })[st.etat] || "";
+}
+async function listeBiblio(){
+  if(!SRV()) return index();
+  try{
+    const l = await api("/api/videos");
+    await Store.set("index_srv", l);
+    // les vidéos restées seulement sur cet appareil apparaissent aussi
+    const loc = (await index()).filter(x => !l.some(y => y.id === x.id));
+    return l.concat(loc);
+  }catch(e){
+    const cache = await Store.get("index_srv");
+    return (cache || []).concat((await index()).filter(x => !(cache || []).some(y => y.id === x.id)));
+  }
+}
+function syncNotes(v){
+  clearTimeout(syncNotes._t);
+  syncNotes._t = setTimeout(() => {
+    api("/api/videos/" + v.id + "/notes", {method:"PUT", body: JSON.stringify({notes: v.notes || {}, notesT: v.notesT || [], questions: v.questions || {}})}).catch(() => {});
+  }, 1200);
+}
+
+let SUIVI = null;
+function suivreServeur(){
+  clearInterval(SUIVI);
+  if(!SRV() || !VID) { $("etatServeur").textContent = ""; return; }
+  const id = VID.id;
+  const regarde = async () => {
+    if(!VID || VID.id !== id){ clearInterval(SUIVI); return; }
+    try{
+      const e = await api("/api/videos/" + id + "/etat");
+      $("etatServeur").textContent = texteEtat(e);
+      const faitsIci = VID.moments.filter(m => m.fait).length;
+      if(e.faits !== faitsIci || (e.audio && !(VID.audio && VID.audio.lecon))){
+        const v = await api("/api/videos/" + id);
+        Object.assign(VID, {segs: v.segs, moments: v.moments, audio: v.audio, serveur: v.serveur});
+        await Store.set("video:" + id, VID);
+        rendFrise(); rendPiste(); majMoment(true); majAudioUI(); majBoutonVoix();
+        if(e.audio) toast("L'audio est prêt : il marche même écran éteint");
+      }
+      if(e.serveur && (e.serveur.etat === "pret" || e.serveur.etat === "erreur")) clearInterval(SUIVI);
+    }catch(err){ $("etatServeur").textContent = err.message; }
+  };
+  regarde(); SUIVI = setInterval(regarde, 6000);
+}
+
+/* =====================================================================
+   L'AUDIO RÉEL — celui qui continue écran éteint
+   Un vrai fichier son, comme un podcast. Le téléphone le laisse jouer
+   écran verrouillé, avec pause et retour depuis l'écran de verrouillage.
+   ===================================================================== */
+const AUD = {el: null, type: "lecon", dernier: 0};
+function aDuSonGarde(){ return !!(VID && VID.audioGarde && VID.audioGarde[AUD.type]); }
+function audioDispo(){ return !!(VID && VID.audio && VID.audio.lecon && (SRV() || aDuSonGarde())); }
+function audioActif(){ return !!(AUD.el && !AUD.el.paused && !AUD.el.ended); }
+function pistesAudio(){ return (VID && VID.audio && VID.audio[AUD.type] && VID.audio[AUD.type].pistes) || []; }
+function chapitres(){ return (VID && VID.audio && VID.audio[AUD.type] && VID.audio[AUD.type].chapitres) || []; }
+
+async function sourceAudio(){
+  try{
+    const r = await idb("readonly", st => st.get("mp3:" + VID.id + ":" + AUD.type));
+    if(r && r.v) return URL.createObjectURL(r.v);          // gardé sur l'appareil : marche sans réseau
+  }catch(e){}
+  return SRV() ? urlAudio(VID.id, AUD.type) : null;
+}
+async function preparerAudio(){
+  if(!AUD.el){
+    AUD.el = new Audio(); AUD.el.preload = "metadata";
+    AUD.el.addEventListener("timeupdate", syncAudio);
+    AUD.el.addEventListener("play", majBoutonVoix);
+    AUD.el.addEventListener("pause", majBoutonVoix);
+    AUD.el.addEventListener("ended", () => { majBoutonVoix(); $("ecouteQuoi").textContent = "Fin de la leçon. Bravo."; });
+    AUD.el.addEventListener("error", () => toast("Le son ne se charge pas. Vérifie ta connexion, ou garde-le sur l'appareil."));
+  }
+  const cle = VID.id + ":" + AUD.type;
+  if(AUD.el.dataset.cle !== cle){
+    const src = await sourceAudio();
+    if(!src) throw new Error("Son indisponible");
+    AUD.el.src = src; AUD.el.dataset.cle = cle;
+  }
+  sessionMedia();
+}
+function allerAudio(t){
+  if(t == null) return;
+  if(AUD.el.readyState >= 1) AUD.el.currentTime = Math.max(0, t);
+  else AUD.el.addEventListener("loadedmetadata", () => { AUD.el.currentTime = Math.max(0, t); }, {once: true});
+}
+async function lanceAudio(depuis){
+  coupeDub(); Lecteur.pause(); if(Voix.actif) arreteVoix();
+  try{ await preparerAudio(); }catch(e){ return toast(e.message); }
+  if(depuis != null) allerAudio(depuis);
+  else if(!AUD.el.currentTime){
+    const p = parseFloat(localStorage.getItem("pos:" + VID.id + ":" + AUD.type) || "0");
+    if(p > 3) allerAudio(p - 2);                                 // on reprend où tu t'étais arrêté
+  }
+  try{ await AUD.el.play(); }catch(e){ toast("Appuie encore une fois pour lancer le son"); }
+  majBoutonVoix();
+}
+function syncAudio(){
+  const t = AUD.el.currentTime, P = pistesAudio();
+  let lo = 0, hi = P.length - 1, k = -1;
+  while(lo <= hi){ const mid = (lo + hi) >> 1; if(P[mid].t0 <= t){ k = mid; lo = mid + 1; } else hi = mid - 1; }
+  if(k < 0) return;
+  const p = P[k];
+  if(p.mi !== ICI_MOM){ ICI_MOM = p.mi; rendFrise(); majMoment(true); majBoutonVoix(); sessionMedia(); }
+  if(p.i != null){ if(p.i !== ICI_SEG){ ICI_SEG = p.i; if(!document.hidden) surligne(p.i, true); } allumeBloc(null); }
+  else allumeBloc(p.bloc || null);
+  if(Math.abs(t - AUD.dernier) > 5){ AUD.dernier = t; try{ localStorage.setItem("pos:" + VID.id + ":" + AUD.type, String(t)); }catch(e){} }
+}
+function sauteChapitre(sens){
+  const C = chapitres(); if(!C.length) return;
+  const t = AUD.el ? AUD.el.currentTime : 0;
+  let k = 0; C.forEach((c, i) => { if(c.t0 <= t + 0.5) k = i; });
+  // « précédent » au milieu d'un passage revient d'abord à son début
+  if(sens < 0 && t - C[k].t0 > 4) sens = 0;
+  k = Math.max(0, Math.min(C.length - 1, k + sens));
+  lanceAudio(C[k].t0);
+}
+function sessionMedia(){
+  if(!("mediaSession" in navigator) || !VID) return;
+  const m = VID.moments[ICI_MOM];
+  try{
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: (m && m.titre) || VID.titre, artist: VID.coach, album: VID.titre,
+      artwork: [{src: "icon-512.png", sizes: "512x512", type: "image/png"}]
+    });
+  }catch(e){}
+  const act = (a, f) => { try{ navigator.mediaSession.setActionHandler(a, f); }catch(e){} };
+  act("play", () => AUD.el && AUD.el.play());
+  act("pause", () => AUD.el && AUD.el.pause());
+  act("seekbackward", () => { if(AUD.el) AUD.el.currentTime = Math.max(0, AUD.el.currentTime - 15); });
+  act("seekforward", () => { if(AUD.el) AUD.el.currentTime += 15; });
+  act("previoustrack", () => sauteChapitre(-1));
+  act("nexttrack", () => sauteChapitre(1));
+}
+function majAudioUI(){
+  const ok = MODE === "lecon" && audioDispo();
+  $("optAudio").style.display = ok ? "flex" : "none";
+  if(ok){
+    const garde = aDuSonGarde();
+    $("btnGarderAudio").textContent = garde ? "Gardé sur cet appareil ✓ — marche sans réseau" : "Garder sur cet appareil, pour écouter sans réseau";
+  }
+}
+document.querySelectorAll('input[name="typeAudio"]').forEach(r => r.onchange = () => {
+  const joue = audioActif();
+  if(AUD.el){ AUD.el.pause(); AUD.el.dataset.cle = ""; }
+  AUD.type = r.value; majAudioUI(); majBoutonVoix();
+  if(joue) lanceAudio();
+});
+$("btnGarderAudio").onclick = async () => {
+  if(!VID || !SRV()) return;
+  if(aDuSonGarde()) return toast("Déjà gardé sur cet appareil");
+  const b = $("btnGarderAudio"); b.textContent = "Téléchargement…";
+  try{
+    const r = await fetch(urlAudio(VID.id, AUD.type));
+    if(!r.ok) throw new Error();
+    const blob = await r.blob();
+    await idb("readwrite", st => st.put({k: "mp3:" + VID.id + ":" + AUD.type, v: blob}));
+    VID.audioGarde = Object.assign({}, VID.audioGarde, {[AUD.type]: true});
+    await Store.set("video:" + VID.id, VID);
+    toast("Gardé : " + Math.round(blob.size / 1048576) + " Mo. Il marche maintenant sans réseau.");
+  }catch(e){ toast("Téléchargement impossible. Réessaie avec du réseau."); }
+  majAudioUI();
+};
+
+/* =====================================================================
+   LE DOUBLAGE SYNCHRONISÉ
+   Une piste française fabriquée par le serveur, calée seconde par seconde
+   sur la vidéo. On la fait avancer avec la vidéo, et on la recale si les
+   deux s'écartent de plus d'une demi-seconde.
+   ===================================================================== */
+const DBL = {el: null};
+function doublageDispo(){ return !!(VID && VID.audio && VID.audio.doublage && SRV()); }
+function prepareDoublage(){
+  if(!doublageDispo()) return;
+  if(!DBL.el){ DBL.el = new Audio(); DBL.el.preload = "auto"; }
+  if(DBL.el.dataset.cle !== VID.id){ DBL.el.src = urlAudio(VID.id, "doublage"); DBL.el.dataset.cle = VID.id; }
+}
+function syncDoublage(){
+  if(!DBL.el || !doublageDispo()) return;
+  if(MODE !== "video" || !$("optVoixFr").checked){ if(!DBL.el.paused) DBL.el.pause(); return; }
+  if(DBL.el.dataset.cle !== VID.id) prepareDoublage();
+  const tv = Lecteur.temps();
+  if(Lecteur.enLecture()){
+    if(Math.abs(DBL.el.currentTime - tv) > 0.5) DBL.el.currentTime = tv;
+    if(DBL.el.paused) DBL.el.play().catch(() => {});
+  } else if(!DBL.el.paused) DBL.el.pause();
+}
+
+/* ---- l'écran reste allumé pendant qu'on traduit sur l'appareil ---- */
+let VERROU = null;
+async function gardeEcran(on){
+  try{
+    if(on && "wakeLock" in navigator) VERROU = await navigator.wakeLock.request("screen");
+    else if(!on && VERROU){ await VERROU.release(); VERROU = null; }
+  }catch(e){}
+}
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible" && EN_COURS) gardeEcran(true); });
+
+/* ---- réglages du serveur ---- */
+(function(){
+  const x = SRV(); if(x){ $("srvUrl").value = x.url; $("srvMdp").value = x.mdp; $("srvEtat").innerHTML = '<span class="ok">Serveur réglé.</span>'; }
+})();
+$("btnSrv").onclick = async () => {
+  const url = $("srvUrl").value.trim().replace(/\/+$/, ""), mdp = $("srvMdp").value.trim();
+  if(!/^https:\/\//.test(url)) return $("srvEtat").innerHTML = '<span class="err">L\'adresse doit commencer par https://</span>';
+  if(!mdp) return $("srvEtat").innerHTML = '<span class="err">Il manque le mot de passe.</span>';
+  localStorage.setItem(CLE_SERVEUR, JSON.stringify({url, mdp}));
+  $("srvEtat").textContent = "Test en cours…";
+  try{ await api("/api/ping"); $("srvEtat").innerHTML = '<span class="ok">Ton serveur répond. Tout passe par lui maintenant.</span>'; }
+  catch(e){ $("srvEtat").innerHTML = '<span class="err">' + esc(e.message) + '</span>'; }
+};
+$("btnSrvOubli").onclick = () => {
+  localStorage.removeItem(CLE_SERVEUR); $("srvUrl").value = ""; $("srvMdp").value = "";
+  $("srvEtat").textContent = "Serveur oublié. L'app travaille de nouveau seule sur cet appareil.";
+};
+$("btnSrvEnvoi").onclick = async () => {
+  if(!SRV()) return toast("Règle d'abord ton serveur");
+  const l = await index(); let n = 0;
+  $("srvEtat").textContent = "Envoi…";
+  for(const e of l){
+    const v = await Store.get("video:" + e.id); if(!v) continue;
+    try{
+      await api("/api/videos/" + v.id, {method:"PUT", body: JSON.stringify(v)});
+      await api("/api/videos/" + v.id + "/traiter", {method:"POST"});   // il fabrique l'audio, et finit ce qui manque
+      n++;
+    }catch(err){}
+  }
+  $("srvEtat").innerHTML = '<span class="ok">' + n + ' vidéo(s) envoyée(s). Ton serveur va fabriquer leur audio.</span>';
 };
 
 /* ---- déposer la vidéo ---- */
@@ -1680,7 +2046,7 @@ $("fichierMedia").onchange = () => {
 
 /* ---- commandes de la lecture ---- */
 $("btnLectRetour").onclick = () => {
-  clearInterval(TIC); coupeDub(); Lecteur.pause(); arreteVoix();
+  clearInterval(TIC); coupeDub(); Lecteur.pause(); arreteVoix(); if(AUD.el) AUD.el.pause(); if(DBL.el) DBL.el.pause(); clearInterval(SUIVI);
   montre("biblio"); rendBiblio();
 };
 document.querySelectorAll("#langue button").forEach(b=>{
@@ -1693,8 +2059,16 @@ document.querySelectorAll("#langue button").forEach(b=>{
 });
 $("btnArrets").onclick = () => { ARRETS = !ARRETS; $("btnArrets").classList.toggle("on", ARRETS); toast(ARRETS ? "Le coach t'arrêtera à chaque passage" : "Lecture sans arrêt"); };
 $("btnMenu").onclick = () => { const m = $("menu"); m.style.display = m.style.display === "none" ? "block" : "none"; };
-$("btnReprendre").onclick = () => {
+$("btnReprendre").onclick = async () => {
   if(!VID) return;
+  if(SRV()){
+    try{
+      await api("/api/videos/" + VID.id, {method:"PUT", body: JSON.stringify(VID)});
+      await api("/api/videos/" + VID.id + "/traiter", {method:"POST"});
+      toast("Ton serveur s'en occupe. Tu peux fermer l'app.");
+      suivreServeur(); return;
+    }catch(e){ toast(e.message); }
+  }
   if(EN_COURS === VID.id) return toast("Déjà en cours");
   VID.moments.forEach(m=>{ if(!m.fait) delete m.echec; });
   toast("Je reprends les passages manquants");
@@ -1732,10 +2106,10 @@ $("btnReglagesRetour").onclick = () => { montre("biblio"); rendBiblio(); };
 $("btnCle").onclick = async () => {
   const k = $("cle").value.trim();
   if(!k) return toast("Colle la clé d'abord");
-  API_KEY = k; $("cleEtat").textContent = "Test en cours…";
+  API_KEY = k; gardeCleCommune(k); await Store.set("apikey", k);
+  $("cleEtat").textContent = "Clé gardée. Test en cours…";
   try{
     await demande("Réponds juste : ok", 10);
-    await Store.set("apikey", k);
     $("cleEtat").innerHTML = '<span class="ok">Clé valide et enregistrée.</span>';
   }catch(e){ API_KEY = ""; $("cleEtat").innerHTML = '<span class="err">'+esc(e.message === "TROP" ? "Trop de demandes, réessaie dans un instant." : e.message)+'</span>'; }
 };
@@ -1756,8 +2130,10 @@ window.addEventListener("offline", () => { if(VID) majAide(); choisitVoix(); });
    DÉMARRAGE
    ===================================================================== */
 (async function(){
-  let k = await Store.get("apikey");
+  let k = cleCommune();
+  if(!k) k = await Store.get("apikey");
   if(!k) k = await Store.get("cle");
+  if(k) gardeCleCommune(k);
   if(k){ API_KEY = k; $("cle").value = k; $("cleEtat").innerHTML = '<span class="ok">Clé en place.</span>'; }
   rendBiblio();
 })();

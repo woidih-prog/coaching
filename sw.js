@@ -1,6 +1,6 @@
 /* Garde la page sur l'appareil pour qu'elle s'ouvre sans réseau.
    YouTube et l'API ne sont jamais gardés : ils ont besoin d'internet. */
-const CACHE = "coaching-v1";
+const CACHE = "coaching-v3";
 const FICHIERS = ["./", "./index.html", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
