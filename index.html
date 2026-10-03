@@ -3858,16 +3858,9 @@ $("btnLire").onclick = async () => {
   // Les écoles de référence d'abord, comme avant. Seules différences :
   // on ne garde que les phrases qui se disent, et on trie par pertinence
   // au lieu de couper les 40 premières dans l'ordre du fichier.
-  const notees = fichesUtilisables().filter(estDicible).map(f => {
-    const e = ECOLES[f.ecole];
-    let sc = ["moi","sami"].includes(f.ecole) ? 0 : 3;
-    if(e && e.marches && !e.marches.includes(marche)) sc -= 3;
-    sc += Math.min(2, (f.valide||0) * 0.8);
-    return {f, sc};
-  }).sort((a,b)=>b.sc-a.sc).slice(0, 45).map(x=>x.f);
-  const fiches = notees.map(f => `[${f.ecole||"toi"}] ${f.situation||f.label} → « ${f.phrase} »`).join("\n");
-  const principesLus = FICHES.filter(f => !estDicible(f)).slice(0, 12)
-    .map(f => `- [${f.ecole||"toi"}] ${f.phrase}`).join("\n");
+  // Le call est fini : on lui donne tout, il n'a rien à aller chercher.
+  const fiches = methodeEntiere();
+  const principesLus = "";
 
   remetLectureAuDebut();
   $("lecture").innerHTML = '<p style="color:var(--amber)">Le coach lit ton call… une à deux minutes.</p>';
@@ -5765,6 +5758,22 @@ function fichesDuSegment(n, segKeys){
   return out.slice(0, total);
 }
 
+/* Toute la méthode, mise à plat, pour les analyses où le temps ne compte pas.
+   Le coach n'a plus rien à aller chercher : il a tout devant lui et il raisonne. */
+function methodeEntiere(){
+  const groupes = {};
+  fichesUtilisables().forEach(f => { (groupes[f.ecole || "autre"] = groupes[f.ecole || "autre"] || []).push(f); });
+  const court = t => { const x = String(t || "").trim(); return x.length > 260 ? x.slice(0, 257) + "…" : x; };
+  return Object.entries(groupes).map(([ecole, l]) => {
+    return `### ${ecole.toUpperCase()} (${l.length} fiches)\n` + l.map(f => {
+      const dit = estDicible(f);
+      return `- ${f.label || f.situation || ""}${f.situation && f.label ? " — " + court(f.situation) : ""}\n`
+           + `  ${dit ? "À DIRE : « " + f.phrase + " »" : "PRINCIPE : " + f.phrase}\n`
+           + (f.pourquoi ? `  POURQUOI : ${court(f.pourquoi)}\n` : "");
+    }).join("");
+  }).join("\n");
+}
+
 /* =====================================================================
    LA BIBLIOTHÈQUE — toute ta méthode, consultable par le coach
    On indexe chaque fiche une fois. Ensuite, le coach pose sa question
@@ -7060,23 +7069,10 @@ Compare ce qu'il vient de faire en simulation avec ce qu'il avait fait en vrai. 
 LE SPARRING :
 ${SPAR.tours.map(t=>(t.qui==="MOI"?"CLOSER":"PROSPECT")+" : "+t.txt).join("\n")}
 
-${(function(){
-  const t = segmentCourant().terrain;
-  const bonnes = Object.entries(ECOLES).filter(([k,v])=>(v.terrains||[]).includes(t)).map(([k])=>k);
-  const utiles = FICHES
-    .map(f=>{
-      const gen = (f.ecole === "moi" || !f.ecole || f.ecole === "sami");
-      let sc = (f.valide||0) * 1.5 + (gen ? ((f.ecole === "sami") ? 0.5 : 1) : 0);
-      if(!gen) sc += bonnes.includes(f.ecole) ? 3 : -1.5;   // le spécialiste du terrain d'abord
-      return {f, s: sc};
-    })
-    .sort((a,b)=>b.s-a.s).slice(0, 12).filter(x=>x.s>0);
-  if(!utiles.length) return "";
-  return `LA MÉTHODE DE RÉFÉRENCE DE CE CLOSER, sur ce moment du call :
-${utiles.map(x=>`- [${x.f.ecole||"lui"}] ${x.f.situation||x.f.label} → « ${x.f.phrase} »`).join("\n")}
+SA MÉTHODE, EN ENTIER. Tu l'as toute sous les yeux : ne cherche pas à la citer, imprègne-t'en.
+${methodeEntiere()}
 
-JUGE-LE PAR RAPPORT À CETTE MÉTHODE-LÀ, pas par rapport à une bonne pratique générale. Quand il s'en écarte, dis-lui laquelle il aurait dû utiliser et à quel moment. Quand il l'applique bien, dis-le aussi.`;
-})()}
+Tu as lu sa méthode en entier. Maintenant, oublie-la le temps de relire le call : d'abord tu comprends ce qui s'est passé, ensuite seulement tu regardes ce qui, là-dedans, aurait servi. Nomme la fiche et le moment. Si rien dans sa méthode ne couvre ce qu'il aurait fallu faire, dis-le franchement : c'est un trou dans sa base, et c'est une information utile.
 
 ${((SPAR && SPAR.marche) || sparMarche) === "b2b" ? `CE CALL EST EN B2B. Ne lui reproche jamais de ne pas avoir cherché l'émotion, et ne lui suggère jamais une question du type « et toi, qu'est-ce que ça te fait » ou « dans un an, il se passe quoi pour toi ». Ces questions font perdre un professionnel.
 Ce que tu attends à la place : des chiffres, la propagation du problème aux autres équipes, le circuit de décision, le déclencheur, et l'enjeu personnel abordé par le côté — crédibilité, objectifs, charge de travail.
