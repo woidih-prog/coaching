@@ -5399,8 +5399,10 @@ LE MOMENT TRAVAILLÉ : ${seg.nom} — ${seg.objectif}
 CE QUI EST ATTENDU SUR CE MOMENT — c'est le but, PAS une liste de courses à réclamer tour après tour :
 ${seg.criteres.map((c,i)=>(i+1)+". "+c).join("\n")}
 
-QUAND UN COUP EST JOUABLE :
+CE QUI REND UN COUP PRÉMATURÉ — c'est une aide au diagnostic, pas un règlement :
 ${TABLE_COUPS}
+
+Attention : cette table ne dit pas ce que le closer DOIT faire. Elle dit ce qui tombe à plat quand le terrain n'est pas prêt. Un closer qui prend une autre route que la tienne n'a pas tort. Il a tort seulement si sa route lui coûte quelque chose.
 
 Une question posée trop tôt sonne comme un script, et le prospect le sent. Le coût de l'inaction demandé alors qu'il n'a rien admis, ou le ressenti demandé alors qu'il est encore factuel et fermé, sont les deux fautes les plus fréquentes. Ne les commets pas toi-même en les réclamant au closer.
 
@@ -5413,20 +5415,39 @@ L'ÉCHANGE :
 ${(SPAR.tours||[]).slice(-14).map(t=>(t.qui==="MOI"?"CLOSER":"PROSPECT")+" : "+t.txt).join("\n")}
 CLOSER (à l'instant) : ${cequejedis}
 
+TU REGARDES UN CALL QUI AVANCE, PAS UNE PHRASE ISOLÉE.
+Avant de juger quoi que ce soit, demande-toi où ce closer est en train d'aller. Il a une intention, même maladroite. Un vrai coach la repère, la suit, et ne l'interrompt que si elle va dans le mur.
+
+LA RÈGLE DE PATIENCE, c'est la plus importante :
+Une piste met deux ou trois tours à rapporter quelque chose. Tant qu'elle est jeune, tu observes : tu regardes ce qu'elle récolte, tu ne coupes pas. Une question qui n'a pas encore reçu sa réponse n'est pas une faute. Un chemin différent du tien n'est pas une faute. Une formulation imparfaite n'est pas une faute.
+
+Au bout de trois tours, tu regardes ce que cette direction a rapporté. Si elle a donné de la matière — un chiffre, un aveu, une ouverture — tu la laisses vivre. Si elle n'a rien donné, c'est là, et seulement là, que tu interviens : cette direction ne mène nulle part, tu le dis et tu montres où aller.
+
+Une erreur n'est pas forcément une faute. Beaucoup se rattrapent deux tours plus tard. Tu ne coupes que pour celles qui ne se rattrapent pas.
+
+Tu n'arrêtes que si tu peux nommer, en une phrase, ce que ça va coûter dans les deux minutes qui suivent. Si tu n'arrives pas à le nommer, c'est que ce n'était pas grave : tu notes et tu laisses continuer.
+
 RAISONNE DANS CET ORDRE :
-1. Ce que le prospect vient d'offrir : un chiffre, un aveu, une contradiction, une émotion, une esquive, ou rien.
-2. Ce que le closer essayait de faire.
-3. Le meilleur coup maintenant, avec tes mots.
-4. Ce coup est-il autorisé à cet instant ? Si un préalable manque, le vrai coup devient d'aller le chercher.
-5. Faut-il l'interrompre ? Tu doses : laisser si ce n'est pas grave, noter si ça se verra au débrief, arrêter seulement si la suite du call est fichue sans correction immédiate.
-6. Si tu l'arrêtes : qu'est-ce que tu cherches dans sa méthode ? Écris-le comme une question posée à voix haute, avec les mots du métier. Pas un mot-clé : une phrase.
+1. Où va ce call ? Quel est le plan du closer depuis deux ou trois tours, même s'il ne le dit pas ?
+2. Ce que le prospect vient d'offrir : un chiffre, un aveu, une contradiction, une émotion, une esquive, ou rien.
+3. Est-ce que le closer avance vers son but, ou est-ce qu'il tourne en rond ?
+4. S'il avance : tu le laisses, même si tu aurais fait autrement. S'il tourne en rond ou s'il vient de laisser filer ce que le prospect lui offrait, alors seulement : quel est le meilleur coup maintenant ?
+5. Ce coup serait-il prématuré ? Si un préalable manque, le vrai coup devient d'aller le chercher.
+6. Qu'est-ce que ça coûte si tu ne dis rien ? Nomme-le concrètement, ou renonce à l'arrêter.
+7. Si tu l'arrêtes : qu'est-ce que tu cherches dans sa méthode ? Écris-le comme une question posée à voix haute, avec les mots du métier. Pas un mot-clé : une phrase.
 
 Réponds uniquement avec ce JSON, sans markdown :
-{"offert":"ce que le prospect vient d offrir",
+{"plan":"ou va ce closer depuis deux ou trois tours, avec tes mots",
+ "piste":"la direction qu il creuse en ce moment, en quelques mots — la meme formulation tant qu il reste dessus",
+ "recolte":"ce que ce tour-ci a rapporte pour cette direction : un chiffre, un aveu, une ouverture — ou null si ce tour n a rien donne",
+ "rattrapable":true si l erreur peut encore se rattraper dans les tours suivants, false si elle est irrattrapable,
+ "avance":true si il avance vers son but, false s il tourne en rond ou s il vient de laisser filer quelque chose,
+ "offert":"ce que le prospect vient d offrir",
  "coup":"le meilleur coup maintenant, avec tes mots",
  "jouable":true ou false,
  "manque":"le prealable qui manque et donc le vrai coup a jouer, ou null",
- "gravite":"laisser ou noter ou arreter",
+ "cout_si_rien":"ce que ca va couter dans les deux minutes si tu ne dis rien, concretement, ou null si tu ne peux pas le nommer",
+ "gravite":"laisser ou noter ou arreter — arreter est interdit si cout_si_rien est null",
  "faute_code":"deux ou trois mots stables pour nommer cette faute, toujours les memes pour la meme faute, ou null",
  "quoi":"ce qu il vient de faire de travers, en une phrase, ou null",
  "pourquoi":"pourquoi ca coute, en une phrase, ou null",
@@ -5461,8 +5482,10 @@ TU RAISONNES AVANT DE REGARDER LES FICHES. C'EST L'ORDRE, ET IL NE CHANGE PAS.
 4. Ce coup est-il autorisé à cet instant ? Regarde la table ci-dessous. S'il manque un préalable, le coup n'est pas jouable : le vrai coup devient d'aller chercher ce qui manque.
 5. Seulement là : une fiche sert-elle ce coup ? Si oui, tu pars de son mécanisme. Si aucune ne le sert, tu expliques sans proposer de phrase.
 
-QUAND UN COUP EST JOUABLE :
+CE QUI REND UN COUP PRÉMATURÉ — c'est une aide au diagnostic, pas un règlement :
 ${TABLE_COUPS}
+
+Attention : cette table ne dit pas ce que le closer DOIT faire. Elle dit ce qui tombe à plat quand le terrain n'est pas prêt. Un closer qui prend une autre route que la tienne n'a pas tort. Il a tort seulement si sa route lui coûte quelque chose.
 
 Une question posée trop tôt sonne comme un script, et le prospect le sent. Le coût de l'inaction demandé alors qu'il n'a rien admis, ou le ressenti demandé alors qu'il est encore factuel et fermé, sont les deux fautes les plus fréquentes. Ne les commets pas toi-même en les réclamant au closer.
 
@@ -5974,6 +5997,15 @@ function majDossier(c){
   const d = dossier();
   if(c.acquis && !d.acquis.includes(c.acquis)){ d.acquis.push(c.acquis); if(d.acquis.length > 14) d.acquis = d.acquis.slice(-14); }
   if(c.coup){ d.coups.push(c.coup); if(d.coups.length > 6) d.coups = d.coups.slice(-6); }
+  if(c.plan){ d.plan = c.plan; }                       // le fil du call, d'un tour à l'autre
+  // la piste en cours : on la suit, on compte ce qu'elle rapporte
+  const tour = (SPAR.tours||[]).length;
+  if(c.piste){
+    const memePiste = d.piste && procheDe(new Set(motsDe(d.piste.direction)), new Set(motsDe(c.piste)));
+    if(!memePiste) d.piste = {direction: c.piste, debut: tour, recolte: []};
+    else d.piste.direction = c.piste;
+  }
+  if(d.piste && c.recolte) d.piste.recolte.push(c.recolte);
   if(c.faute_code){
     const f = d.fautes[c.faute_code] || {n:0, tour:0};
     f.n++; f.tour = (SPAR.tours||[]).length; f.texte = c.quoi || f.texte;
@@ -5983,8 +6015,22 @@ function majDossier(c){
 }
 function texteDossier(){
   const d = dossier();
+  const fil = d.plan ? `OÙ TU PENSAIS QU'IL ALLAIT, AU TOUR PRÉCÉDENT : ${d.plan}
+S'il tient le même cap, c'est qu'il mène son call. Ne le coupe pas parce qu'il ne prend pas ta route.
+
+` : "";
+  const p = d.piste, age = p ? (SPAR.tours||[]).length - p.debut : 0;
+  const piste = !p ? "" : `LA PISTE EN COURS : ${p.direction}
+Elle dure depuis ${age} tour(s). Ce qu'elle a rapporté jusqu'ici : ${p.recolte.length ? p.recolte.join(" ; ") : "rien pour l'instant"}.
+${age < 3
+  ? "FENÊTRE D'OBSERVATION OUVERTE. Tu regardes, tu ne coupes pas. Même si tu aurais fait autrement. La seule exception : une faute irrattrapable."
+  : (p.recolte.length
+      ? "Cette piste a donné quelque chose. Laisse-la vivre tant qu'elle rapporte."
+      : "Trois tours sur cette piste, et elle n'a rien donné. C'est maintenant que tu interviens : cette direction ne mène nulle part, dis-le et montre où aller.")}
+
+`;
   const f = Object.entries(d.fautes).map(([k,v]) => `- ${v.texte || k} : ${v.n} fois`).join("\n");
-  return `CE QUE LE PROSPECT A DÉJÀ DONNÉ — ne le refais jamais redemander :
+  return fil + piste + `CE QUE LE PROSPECT A DÉJÀ DONNÉ — ne le refais jamais redemander :
 ${d.acquis.length ? d.acquis.map(x=>"- "+x).join("\n") : "rien encore"}
 
 TES DERNIERS COUPS DEMANDÉS — ne redemande pas le même deux fois de suite :
@@ -6617,6 +6663,13 @@ $("btnSparEnvoi").onclick = async () => {
     $("sparInfo").innerHTML = '<span style="color:var(--muted)">Le coach regarde…</span>';
     try{
       const a = await coachAnalyse(m);
+      // un arrêt sans coût nommable n'est pas un arrêt : c'est une remarque
+      if(a.gravite === "arreter" && !a.cout_si_rien) a.gravite = "noter";
+      if(a.avance === true && a.gravite === "arreter" && !a.cout_si_rien) a.gravite = "laisser";
+      // fenêtre d'observation : une piste jeune a le droit de ne pas encore avoir donné
+      const dp = dossier().piste;
+      const ageP = dp ? (SPAR.tours||[]).length - dp.debut : 99;
+      if(a.gravite === "arreter" && a.rattrapable !== false && ageP < 3) a.gravite = "noter";
       majDossier(a);
       // il ne déroule la méthode que s'il interrompt : le reste du temps, un seul appel suffit
       const c = (a.gravite === "arreter")
@@ -6632,7 +6685,10 @@ $("btnSparEnvoi").onclick = async () => {
         const raison = $("coachRaison");
   if(raison){
     const bouts = [];
+    if(c.plan) bouts.push("Là où tu allais : " + c.plan);
     if(c.offert) bouts.push("Il vient d'offrir : " + c.offert);
+    if(c.piste) bouts.push("La piste creusée : " + c.piste + (c.recolte ? " — elle a donné : " + c.recolte : " — elle n'a rien donné"));
+    if(c.cout_si_rien) bouts.push("Ce que ça allait coûter : " + c.cout_si_rien);
     if(c.coup) bouts.push("Le coup à jouer : " + c.coup);
     if(c.jouable === false && c.manque) bouts.push("Mais il manque d'abord : " + c.manque);
     raison.innerHTML = bouts.length ? bouts.map(x=>escapeHTML(x)).join("<br>") : "";
